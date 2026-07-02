@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convertisseur JCAMP-DX — spectres vers CSV / JSON</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23EDF1EF'/%3E%3Cpath d='M2 20 L8 20 L11 9 L14 26 L18 14 L21 20 L30 20' fill='none' stroke='%233F7768' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --paper:#EDF1EF;
+    --paper-deep:#E3E9E6;
+    --grid:#C6D3CE;
+    --ink:#16232B;
+    --ink-soft:#4A5A5F;
+    --surface:#FFFFFF;
+    --verdigris:#3F7768;
+    --verdigris-dark:#2E5A4F;
+    --brass:#A9812F;
+    --danger:#B23A2E;
+    --slate:#3B5B7A;
+    --plum:#79486B;
+    --radius:3px;
+    --font-display:'IBM Plex Serif', serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 27px, var(--grid) 27px 28px),
+      repeating-linear-gradient(90deg, transparent 0 27px, var(--grid) 27px 28px),
+      var(--paper);
+    background-attachment: fixed;
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.5;
+  }
+  a{color:var(--verdigris-dark);}
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px;}
+
+  /* ---- nav ---- */
+  nav.topbar{
+    border-bottom:1px solid var(--grid);
+    background:rgba(237,241,239,.88);
+    backdrop-filter:saturate(140%) blur(4px);
+    position:sticky;top:0;z-index:10;
+  }
+  nav.topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;}
+  .wordmark{
+    font-family:var(--font-mono);
+    font-size:14px;
+    font-weight:500;
+    letter-spacing:.02em;
+    color:var(--ink);
+    text-decoration:none;
+    display:flex;align-items:center;gap:8px;
+  }
+  .wordmark svg{width:18px;height:18px;flex-shrink:0;}
+  .nav-links{display:flex;gap:22px;}
+  .nav-links a{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    color:var(--ink-soft);
+    text-decoration:none;
+    letter-spacing:.02em;
+  }
+  .nav-links a:hover{color:var(--verdigris-dark);}
+  @media (max-width:560px){ .nav-links{display:none;} }
+
+  /* ---- header / hero ---- */
+  header.hero{padding:44px 0 40px;position:relative;}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    color:var(--verdigris-dark);
+    text-transform:uppercase;
+    display:flex;align-items:center;gap:8px;
+    margin-bottom:18px;
+  }
+  .eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--verdigris);box-shadow:0 0 0 3px rgba(63,119,104,.15);}
+  h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(28px,4.4vw,44px);
+    line-height:1.08;
+    margin:0 0 16px;
+    max-width:14ch;
+  }
+  .lede{
+    font-size:17px;
+    color:var(--ink-soft);
+    max-width:52ch;
+    margin:0 0 28px;
+  }
+  .badge-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:36px;}
+  .badge{
+    font-family:var(--font-mono);
+    font-size:12px;
+    border:1px solid var(--grid);
+    background:var(--surface);
+    padding:6px 10px;
+    border-radius:var(--radius);
+    color:var(--ink-soft);
+  }
+  .badge strong{color:var(--verdigris-dark);}
+
+  .trace-panel{
+    border:1px solid var(--grid);
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:16px 16px 8px;
+    position:relative;
+  }
+  .trace-panel .label{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:4px;
+  }
+  svg.trace{display:block;width:100%;height:auto;}
+  .trace path.line{
+    fill:none;
+    stroke:var(--verdigris);
+    stroke-width:1.6;
+    stroke-linejoin:round;
+    stroke-linecap:round;
+  }
+  .trace path.line.draw-in{
+    stroke-dasharray:1400;
+    stroke-dashoffset:1400;
+    animation:draw 1.8s ease-out forwards;
+  }
+  @keyframes draw{to{stroke-dashoffset:0;}}
+  .trace .axis{stroke:var(--grid);stroke-width:1;}
+
+  /* ---- sections ---- */
+  section{padding:36px 0;}
+  h2{
+    font-family:var(--font-display);
+    font-size:22px;
+    font-weight:600;
+    margin:0 0 6px;
+  }
+  .section-sub{color:var(--ink-soft);font-size:14.5px;margin:0 0 20px;}
+
+  /* ---- dropzone ---- */
+  .dropzone{
+    border:1.5px dashed var(--grid);
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:40px 24px;
+    text-align:center;
+    transition:border-color .15s, background .15s;
+  }
+  .dropzone.drag-over{
+    border-color:var(--verdigris);
+    background:#F2F7F5;
+  }
+  .dropzone p{margin:0 0 4px;font-size:15px;}
+  .dropzone .hint{font-size:13px;color:var(--ink-soft);font-family:var(--font-mono);}
+  .btn-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px;}
+  button, .btn{
+    font-family:var(--font-body);
+    font-weight:500;
+    font-size:14px;
+    border-radius:var(--radius);
+    padding:10px 18px;
+    cursor:pointer;
+    border:1px solid var(--verdigris);
+    background:var(--verdigris);
+    color:#fff;
+    transition:background .15s, color .15s, border-color .15s;
+  }
+  button:hover, .btn:hover{background:var(--verdigris-dark);border-color:var(--verdigris-dark);}
+  button:focus-visible, .btn:focus-visible, input:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+  button.secondary{background:transparent;color:var(--verdigris-dark);}
+  button.secondary:hover{background:#F2F7F5;}
+  button.ghost{background:transparent;border-color:var(--grid);color:var(--ink-soft);}
+  button.ghost:hover{border-color:var(--ink-soft);color:var(--ink);background:transparent;}
+  #fileInput{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;}
+
+  /* ---- results ---- */
+  #status{font-family:var(--font-mono);font-size:13px;color:var(--ink-soft);min-height:18px;margin:14px 0 0;}
+  .results{display:flex;flex-direction:column;gap:18px;margin-top:22px;}
+  .file-card{
+    border:1px solid var(--grid);
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:18px 20px;
+    transition:box-shadow .18s ease, border-color .18s ease;
+  }
+  .file-card:hover{box-shadow:0 4px 16px rgba(22,35,43,.06);border-color:#B7C7C1;}
+  .file-card.error{border-color:#E3B9B4;background:#FBF3F2;}
+  .file-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .file-name{font-family:var(--font-mono);font-size:14px;font-weight:500;word-break:break-all;}
+  .file-meta-line{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .error-msg{color:var(--danger);font-size:13.5px;}
+  .mini-trace{width:100%;max-width:100%;height:70px;margin:6px 0 12px;}
+  table.meta-table{border-collapse:collapse;width:100%;font-family:var(--font-mono);font-size:12.5px;margin-bottom:14px;}
+  table.meta-table td{padding:3px 8px 3px 0;vertical-align:top;border-bottom:1px solid var(--paper-deep);}
+  table.meta-table td.k{color:var(--ink-soft);white-space:nowrap;width:1%;}
+  .card-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .card-actions button{padding:7px 14px;font-size:13px;}
+
+  .zip-row{margin-top:20px;display:flex;justify-content:flex-end;}
+
+  /* ---- formats / footer ---- */
+  .formats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:8px;}
+  .format-card{border:1px solid var(--grid);background:var(--surface);border-radius:var(--radius);padding:16px;transition:box-shadow .18s ease, border-color .18s ease;}
+  .format-card:hover{box-shadow:0 4px 16px rgba(22,35,43,.06);border-color:#B7C7C1;}
+  .format-card h3{font-family:var(--font-mono);font-size:13px;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;color:var(--verdigris-dark);}
+  .format-card p{font-size:13.5px;color:var(--ink-soft);margin:0;}
+
+  /* ---- comparator ---- */
+  .compare-panel{
+    border:1px solid var(--grid);
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:18px 20px 20px;
+  }
+  .compare-empty{
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--ink-soft);
+    text-align:center;
+    padding:36px 12px;
+  }
+  svg.compare-chart{display:block;width:100%;height:auto;}
+  .compare-chart .axis{stroke:var(--grid);stroke-width:1;}
+  .compare-chart .axis-label{font-family:var(--font-mono);font-size:10px;fill:var(--ink-soft);}
+  .compare-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+  .legend-chip{
+    display:flex;align-items:center;gap:7px;
+    font-family:var(--font-mono);font-size:12px;
+    border:1px solid var(--grid);border-radius:var(--radius);
+    padding:5px 9px 5px 7px;background:var(--paper);
+  }
+  .legend-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+  .legend-chip button{
+    border:none;background:none;padding:0;margin-left:2px;
+    color:var(--ink-soft);cursor:pointer;font-size:14px;line-height:1;
+  }
+  .legend-chip button:hover{color:var(--danger);}
+
+  /* ---- upcoming tools teaser ---- */
+  .tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:8px;}
+  .tool-card{
+    border:1px solid var(--grid);
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:18px;
+    position:relative;
+    transition:box-shadow .18s ease, border-color .18s ease;
+  }
+  .tool-card:hover{box-shadow:0 4px 16px rgba(22,35,43,.06);border-color:#B7C7C1;}
+  .tool-soon{
+    position:absolute;top:14px;right:14px;
+    font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;
+    color:var(--brass);border:1px solid #E3D6B4;background:#FBF6E9;
+    padding:3px 7px;border-radius:var(--radius);text-transform:uppercase;
+  }
+  .tool-card h3{font-family:var(--font-display);font-size:16.5px;font-weight:600;margin:0 34px 8px 0;}
+  .tool-card p{font-size:13.5px;color:var(--ink-soft);margin:0;}
+
+  footer{border-top:1px solid var(--grid);padding:30px 0 50px;margin-top:20px;}
+  footer p{font-size:12.5px;color:var(--ink-soft);font-family:var(--font-mono);max-width:60ch;}
+
+  @media (prefers-reduced-motion: reduce){
+    .trace path.line.draw-in{animation:none;stroke-dashoffset:0;}
+  }
+  @media (max-width:600px){
+    header.hero{padding:36px 0 28px;}
+    .file-card-head{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="wrap">
+    <a href="#" class="wordmark">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M2 20 L8 20 L11 9 L14 26 L18 14 L21 20 L30 20" fill="none" stroke="#3F7768" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      spectra.tools
+    </a>
+    <div class="nav-links">
+      <a href="#upload-section">Convertir</a>
+      <a href="#comparator">Comparer</a>
+      <a href="#formats">Formats</a>
+      <a href="#upcoming">Prochains outils</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">Outil de labo — 01 / conversion de spectres</div>
+    <h1>Vos spectres JCAMP&#8209;DX, propres en CSV et JSON.</h1>
+    <p class="lede">Déposez un ou plusieurs fichiers <strong>.jdx</strong> / <strong>.dx</strong> exportés par votre spectromètre. L'outil décode l'en-tête, reconstruit les points X/Y — y compris les formats compressés SQZ/DIF/DUP — et vous rend des fichiers exploitables tout de suite.</p>
+    <div class="badge-row">
+      <span class="badge"><strong>100% local</strong> — traitement dans votre navigateur</span>
+      <span class="badge"><strong>Aucun compte</strong> requis</span>
+      <span class="badge"><strong>Traitement par lot</strong></span>
+    </div>
+    <div class="trace-panel">
+      <div class="label"><span>APERÇU — TRANSMITTANCE / NOMBRE D'ONDE</span><span id="heroTraceLabel">exemple synthétique</span></div>
+      <svg class="trace" id="heroTrace" viewBox="0 0 860 200" preserveAspectRatio="none" role="img" aria-label="Aperçu d'un spectre infrarouge de démonstration"></svg>
+    </div>
+  </header>
+
+  <section id="upload-section">
+    <h2>Déposer des fichiers</h2>
+    <p class="section-sub">Formats acceptés : JCAMP-DX (.jdx, .dx) — blocs XYDATA (X++(Y..Y)) et XYPOINTS.</p>
+
+    <div class="dropzone" id="dropzone">
+      <p><strong>Glissez-déposez</strong> vos fichiers ici</p>
+      <p class="hint">ou</p>
+      <div class="btn-row">
+        <button type="button" id="browseBtn">Parcourir mes fichiers</button>
+        <button type="button" id="sampleBtn" class="secondary">Essayer avec un exemple</button>
+      </div>
+      <input type="file" id="fileInput" accept=".jdx,.dx,.txt" multiple>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+
+    <div class="results" id="results"></div>
+    <div class="zip-row" id="zipRow" style="display:none;">
+      <button type="button" id="zipBtn" class="secondary">Télécharger tout (.zip)</button>
+    </div>
+  </section>
+
+  <section id="comparator">
+    <h2>Comparateur de spectres</h2>
+    <p class="section-sub">Chargez deux fichiers ou plus pour les superposer sur un même graphique et repérer les écarts d'un coup d'œil.</p>
+
+    <div class="dropzone" id="compareDropzone">
+      <p><strong>Glissez-déposez</strong> vos fichiers ici</p>
+      <p class="hint">ou</p>
+      <div class="btn-row">
+        <button type="button" id="compareBrowseBtn">Parcourir mes fichiers</button>
+        <button type="button" id="compareSampleBtn" class="secondary">Essayer avec deux exemples</button>
+      </div>
+      <input type="file" id="compareFileInput" accept=".jdx,.dx,.txt" multiple>
+    </div>
+    <p id="compareStatus" role="status" aria-live="polite"></p>
+
+    <div class="compare-panel" id="comparePanel" style="margin-top:20px;">
+      <svg class="compare-chart" id="compareChart" viewBox="0 0 860 320" preserveAspectRatio="none" role="img" aria-label="Superposition des spectres chargés"></svg>
+      <div class="compare-legend" id="compareLegend"></div>
+      <p class="compare-empty" id="compareEmptyMsg">Aucun spectre chargé pour l'instant.</p>
+    </div>
+  </section>
+
+  <section id="formats">
+    <h2>Ce que l'outil sait faire</h2>
+    <p class="section-sub">Version 1 — le socle avant d'ajouter d'autres formats.</p>
+    <div class="formats-grid">
+      <div class="format-card">
+        <h3>Pris en charge</h3>
+        <p>JCAMP-DX non compressé (PAC), et compressé SQZ / DIF / DUP. En-têtes de métadonnées (titre, origine, unités, facteurs). Export CSV et JSON.</p>
+      </div>
+      <div class="format-card">
+        <h3>Sur la feuille de route</h3>
+        <p>Formats propriétaires d'instruments (.spc, .spa), export Excel avec graphique intégré, comparaison de deux spectres, identification de pics.</p>
+      </div>
+      <div class="format-card">
+        <h3>Confidentialité</h3>
+        <p>Aucun fichier n'est envoyé à un serveur. Tout le décodage a lieu dans votre navigateur, avec du JavaScript exécuté localement.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="upcoming">
+    <h2>Prochains outils</h2>
+    <p class="section-sub">Le convertisseur et le comparateur sont les deux premières briques. Voici ce qui pourrait suivre, dans le même esprit : gratuit à l'usage simple, sans compte, tout dans le navigateur.</p>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <span class="tool-soon">bientôt</span>
+        <h3>Calculateur de formulation</h3>
+        <p>Ajuster des dosages de composition et visualiser l'effet estimé sur les propriétés finales, à partir de règles simples.</p>
+      </div>
+      <div class="tool-card">
+        <span class="tool-soon">à l'étude</span>
+        <h3>Suivi d'habilitations</h3>
+        <p>Un tableau de bord léger pour suivre les échéances de certifications et de contrôles réglementaires d'une petite équipe.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Prototype — outil de conversion de fichiers de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).</p>
+  </footer>
+
+</div>
+
+<script>
+/* =========================================================
+   JCAMP-DX ASDF decoder (PAC / SQZ / DIF / DUP)
+   ========================================================= */
+const SQZ = {'@':0,'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7,'H':8,'I':9,
+             'a':-1,'b':-2,'c':-3,'d':-4,'e':-5,'f':-6,'g':-7,'h':-8,'i':-9};
+const DIF = {'%':0,'J':1,'K':2,'L':3,'M':4,'N':5,'O':6,'P':7,'Q':8,'R':9,
+             'j':-1,'k':-2,'l':-3,'m':-4,'n':-5,'o':-6,'p':-7,'q':-8,'r':-9};
+const DUP = {'S':1,'T':2,'U':3,'V':4,'W':5,'X':6,'Y':7,'Z':8};
+
+function tokenizeASDFLine(line) {
+  const tokens = [];
+  let i = 0, currentToken = '', mode = null;
+  function flush() {
+    if (currentToken !== '' && currentToken !== '-' && currentToken !== '+' && currentToken !== '.') {
+      tokens.push({ value: parseFloat(currentToken), mode });
+    }
+    currentToken = ''; mode = null;
+  }
+  while (i < line.length) {
+    const c = line[i];
+    if (c in SQZ) { flush(); mode = 'sqz'; currentToken = String(SQZ[c]); }
+    else if (c in DIF) { flush(); mode = 'dif'; currentToken = String(DIF[c]); }
+    else if (c in DUP) { flush(); tokens.push({ value: DUP[c], mode: 'dup' }); }
+    else if (c === '+' || c === '-') { flush(); mode = 'plain'; currentToken = c; }
+    else if (/[0-9.]/.test(c)) { if (mode === null) mode = 'plain'; currentToken += c; }
+    else if (c === ' ' || c === '\t' || c === ',') { flush(); }
+    i++;
+  }
+  flush();
+  return tokens;
+}
+
+function decodeLineToYValues(tokens) {
+  const ys = [];
+  let runningY = null, lastDelta = 0;
+  for (let idx = 1; idx < tokens.length; idx++) {
+    const t = tokens[idx];
+    if (t.mode === 'dup') {
+      for (let k = 0; k < t.value - 1; k++) { runningY = runningY + lastDelta; ys.push(runningY); }
+    } else if (t.mode === 'dif') {
+      runningY = (runningY === null ? 0 : runningY) + t.value;
+      lastDelta = t.value;
+      ys.push(runningY);
+    } else {
+      runningY = t.value; lastDelta = 0; ys.push(runningY);
+    }
+  }
+  return ys;
+}
+
+function parseJcamp(text) {
+  const lines = text.split(/\r?\n/);
+  const meta = {};
+  let dataLines = [], inData = false, dataFormat = null;
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith('##')) {
+      const eq = line.indexOf('=');
+      const label = line.slice(2, eq === -1 ? undefined : eq).trim().toUpperCase();
+      const value = eq === -1 ? '' : line.slice(eq + 1).trim();
+      if (label === 'XYDATA') { inData = true; dataFormat = 'XYDATA'; meta[label] = value; continue; }
+      if (label === 'XYPOINTS') { inData = true; dataFormat = 'XYPOINTS'; meta[label] = value; continue; }
+      if (label === 'END') { inData = false; continue; }
+      meta[label] = value; inData = false;
+    } else if (inData) {
+      dataLines.push(line);
+    }
+  }
+
+  if (!dataFormat) throw new Error("Aucun bloc ##XYDATA= ou ##XYPOINTS= trouvé dans le fichier.");
+
+  const xFactor = parseFloat(meta['XFACTOR'] || '1') || 1;
+  const yFactor = parseFloat(meta['YFACTOR'] || '1') || 1;
+  const firstX = parseFloat(meta['FIRSTX']);
+  const lastX = parseFloat(meta['LASTX']);
+  const nPoints = parseInt(meta['NPOINTS'], 10);
+
+  let xs = [], ys = [];
+
+  if (dataFormat === 'XYPOINTS') {
+    for (const line of dataLines) {
+      for (const p of line.split(';')) {
+        const parts = p.trim().split(/[\s,]+/).filter(Boolean);
+        if (parts.length >= 2) {
+          xs.push(parseFloat(parts[0]) * xFactor);
+          ys.push(parseFloat(parts[1]) * yFactor);
+        }
+      }
+    }
+  } else {
+    if (isNaN(firstX) || isNaN(lastX) || !nPoints) {
+      throw new Error("Métadonnées FIRSTX / LASTX / NPOINTS manquantes ou invalides.");
+    }
+    const deltaX = nPoints > 1 ? (lastX - firstX) / (nPoints - 1) : 1;
+    let globalIndex = 0;
+    for (const line of dataLines) {
+      const tokens = tokenizeASDFLine(line);
+      if (tokens.length === 0) continue;
+      const rawYs = decodeLineToYValues(tokens);
+      for (const ry of rawYs) {
+        xs.push((firstX + globalIndex * deltaX) * xFactor);
+        ys.push(ry * yFactor);
+        globalIndex++;
+      }
+    }
+  }
+
+  if (xs.length === 0) throw new Error("Aucun point de données n'a pu être décodé.");
+  return { meta, xs, ys };
+}
+
+/* =========================================================
+   SVG trace rendering
+   ========================================================= */
+function buildTracePath(xs, ys, width, height, padding) {
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const xSpan = (xMax - xMin) || 1;
+  const ySpan = (yMax - yMin) || 1;
+  const innerW = width - padding * 2;
+  const innerH = height - padding * 2;
+
+  let d = '';
+  for (let i = 0; i < xs.length; i++) {
+    // JCAMP X often decreases (e.g. wavenumber); normalize by index position for plotting stability
+    const px = padding + ((xs[i] - xMin) / xSpan) * innerW;
+    const py = padding + innerH - ((ys[i] - yMin) / ySpan) * innerH;
+    d += (i === 0 ? 'M' : 'L') + px.toFixed(2) + ',' + py.toFixed(2) + ' ';
+  }
+  return d.trim();
+}
+
+function renderTrace(svgEl, xs, ys, opts) {
+  opts = opts || {};
+  const vb = svgEl.viewBox.baseVal;
+  const w = vb.width || 860, h = vb.height || 200;
+  const pad = opts.padding !== undefined ? opts.padding : 14;
+  const d = buildTracePath(xs, ys, w, h, pad);
+  svgEl.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+
+  const axis = document.createElementNS(ns, 'line');
+  axis.setAttribute('x1', pad); axis.setAttribute('x2', w - pad);
+  axis.setAttribute('y1', h - pad); axis.setAttribute('y2', h - pad);
+  axis.setAttribute('class', 'axis');
+  svgEl.appendChild(axis);
+
+  const path = document.createElementNS(ns, 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('class', 'line' + (opts.animate ? ' draw-in' : ''));
+  svgEl.appendChild(path);
+}
+
+/* =========================================================
+   Exporters
+   ========================================================= */
+function toCSV(xs, ys, xLabel, yLabel) {
+  let out = (xLabel || 'x') + ',' + (yLabel || 'y') + '\n';
+  for (let i = 0; i < xs.length; i++) out += xs[i] + ',' + ys[i] + '\n';
+  return out;
+}
+function toJSON(meta, xs, ys) {
+  const data = xs.map((x, i) => ({ x, y: ys[i] }));
+  return JSON.stringify({ metadata: meta, points: data }, null, 2);
+}
+function download(filename, content, mime) {
+  const blob = new Blob([content], { type: mime || 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* =========================================================
+   UI wiring
+   ========================================================= */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const browseBtn = document.getElementById('browseBtn');
+const sampleBtn = document.getElementById('sampleBtn');
+const statusEl = document.getElementById('status');
+const resultsEl = document.getElementById('results');
+const zipRow = document.getElementById('zipRow');
+const zipBtn = document.getElementById('zipBtn');
+
+let processed = []; // { name, meta, xs, ys } for zip export
+
+browseBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+['dragenter', 'dragover'].forEach(evt =>
+  dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); })
+);
+['dragleave', 'drop'].forEach(evt =>
+  dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('drag-over'); })
+);
+dropzone.addEventListener('drop', (e) => {
+  if (e.dataTransfer.files && e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(fileList) {
+  const files = Array.from(fileList);
+  statusEl.textContent = files.length + ' fichier(s) reçu(s) — traitement en cours…';
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      processOne(file.name, reader.result);
+      remaining--;
+      if (remaining === 0) statusEl.textContent = 'Traitement terminé.';
+    };
+    reader.onerror = () => {
+      renderErrorCard(file.name, "Impossible de lire le fichier.");
+      remaining--;
+    };
+    reader.readAsText(file);
+  });
+}
+
+function processOne(name, text) {
+  try {
+    const { meta, xs, ys } = parseJcamp(text);
+    processed.push({ name, meta, xs, ys });
+    renderFileCard(name, meta, xs, ys);
+    zipRow.style.display = processed.length > 1 ? 'flex' : 'none';
+  } catch (err) {
+    renderErrorCard(name, err.message);
+  }
+}
+
+function metaRow(k, v) {
+  return v ? '<tr><td class="k">' + k + '</td><td>' + v + '</td></tr>' : '';
+}
+
+function renderFileCard(name, meta, xs, ys) {
+  const card = document.createElement('div');
+  card.className = 'file-card';
+  const svgId = 'trace-' + Math.random().toString(36).slice(2, 9);
+  card.innerHTML = `
+    <div class="file-card-head">
+      <div>
+        <div class="file-name">${escapeHtml(name)}</div>
+        <div class="file-meta-line">${xs.length} points décodés</div>
+      </div>
+    </div>
+    <svg class="mini-trace" id="${svgId}" viewBox="0 0 800 140" preserveAspectRatio="none" role="img" aria-label="Aperçu du spectre ${escapeHtml(name)}"></svg>
+    <table class="meta-table">
+      ${metaRow('Titre', meta['TITLE'])}
+      ${metaRow('Type', meta['DATA TYPE'])}
+      ${metaRow('Origine', meta['ORIGIN'])}
+      ${metaRow('Unités X', meta['XUNITS'])}
+      ${metaRow('Unités Y', meta['YUNITS'])}
+      ${metaRow('Points', meta['NPOINTS'])}
+    </table>
+    <div class="card-actions">
+      <button type="button" class="secondary" data-action="csv">Télécharger CSV</button>
+      <button type="button" class="secondary" data-action="json">Télécharger JSON</button>
+    </div>
+  `;
+  resultsEl.appendChild(card);
+  renderTrace(document.getElementById(svgId), xs, ys, { padding: 10 });
+
+  const xLabel = meta['XUNITS'] || 'x';
+  const yLabel = meta['YUNITS'] || 'y';
+  card.querySelector('[data-action="csv"]').addEventListener('click', () => {
+    download(baseName(name) + '.csv', toCSV(xs, ys, xLabel, yLabel), 'text/csv');
+  });
+  card.querySelector('[data-action="json"]').addEventListener('click', () => {
+    download(baseName(name) + '.json', toJSON(meta, xs, ys), 'application/json');
+  });
+}
+
+function renderErrorCard(name, message) {
+  const card = document.createElement('div');
+  card.className = 'file-card error';
+  card.innerHTML = `
+    <div class="file-card-head">
+      <div>
+        <div class="file-name">${escapeHtml(name)}</div>
+        <div class="error-msg">Échec du décodage — ${escapeHtml(message)}</div>
+      </div>
+    </div>
+  `;
+  resultsEl.appendChild(card);
+}
+
+zipBtn.addEventListener('click', async () => {
+  if (!window.JSZip) { statusEl.textContent = "JSZip indisponible."; return; }
+  const zip = new JSZip();
+  processed.forEach(p => {
+    const xLabel = p.meta['XUNITS'] || 'x', yLabel = p.meta['YUNITS'] || 'y';
+    zip.file(baseName(p.name) + '.csv', toCSV(p.xs, p.ys, xLabel, yLabel));
+    zip.file(baseName(p.name) + '.json', toJSON(p.meta, p.xs, p.ys));
+  });
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'spectres_convertis.zip';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+function baseName(name) { return name.replace(/\.[^/.]+$/, ''); }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+/* =========================================================
+   Sample file (demo)
+   ========================================================= */
+const SAMPLE_JCAMP = `##TITLE=Polymer film - demo
+##JCAMP-DX=5.01
+##DATA TYPE=INFRARED SPECTRUM
+##ORIGIN=Prototype Lab
+##OWNER=Public
+##XUNITS=1/CM
+##YUNITS=TRANSMITTANCE
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=4000
+##LASTX=3400
+##NPOINTS=60
+##XYDATA=(X++(Y..Y))
+4000 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+3918.64 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+3837.29 0.95 0.95 0.95 0.95 0.948 0.945 0.936 0.914
+3755.93 0.872 0.801 0.701 0.583 0.474 0.408 0.408 0.472
+3674.58 0.578 0.692 0.784 0.842 0.865 0.858 0.831 0.79
+3593.22 0.741 0.691 0.647 0.615 0.601 0.606 0.629 0.668
+3511.86 0.716 0.767 0.815 0.855 0.888 0.911 0.927 0.937
+3430.51 0.943 0.947 0.948 0.949
+##END=
+`;
+
+const SAMPLE_JCAMP_B = `##TITLE=Polymer film - lot B
+##JCAMP-DX=5.01
+##DATA TYPE=INFRARED SPECTRUM
+##ORIGIN=Prototype Lab
+##OWNER=Public
+##XUNITS=1/CM
+##YUNITS=TRANSMITTANCE
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=4000
+##LASTX=3400
+##NPOINTS=60
+##XYDATA=(X++(Y..Y))
+4000 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+3918.64 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+3837.29 0.95 0.95 0.949 0.945 0.937 0.918 0.881 0.818
+3755.93 0.727 0.62 0.52 0.459 0.457 0.515 0.612 0.719
+3674.58 0.81 0.872 0.906 0.917 0.911 0.891 0.861 0.819
+3593.22 0.768 0.711 0.654 0.603 0.567 0.551 0.557 0.584
+3511.86 0.629 0.684 0.742 0.796 0.843 0.879 0.906 0.924
+3430.51 0.936 0.943 0.946 0.948
+##END=
+`;
+
+sampleBtn.addEventListener('click', () => processOne('exemple_polymere.jdx', SAMPLE_JCAMP));
+
+/* =========================================================
+   Comparator
+   ========================================================= */
+const TRACE_COLORS = ['var(--verdigris)', 'var(--brass)', 'var(--danger)', 'var(--slate)', 'var(--plum)'];
+
+const compareDropzone = document.getElementById('compareDropzone');
+const compareFileInput = document.getElementById('compareFileInput');
+const compareBrowseBtn = document.getElementById('compareBrowseBtn');
+const compareSampleBtn = document.getElementById('compareSampleBtn');
+const compareStatus = document.getElementById('compareStatus');
+const compareChart = document.getElementById('compareChart');
+const compareLegend = document.getElementById('compareLegend');
+const compareEmptyMsg = document.getElementById('compareEmptyMsg');
+
+let compareItems = []; // { id, name, xs, ys, color }
+let compareIdSeq = 0;
+
+compareBrowseBtn.addEventListener('click', () => compareFileInput.click());
+compareFileInput.addEventListener('change', (e) => handleCompareFiles(e.target.files));
+
+['dragenter', 'dragover'].forEach(evt =>
+  compareDropzone.addEventListener(evt, (e) => { e.preventDefault(); compareDropzone.classList.add('drag-over'); })
+);
+['dragleave', 'drop'].forEach(evt =>
+  compareDropzone.addEventListener(evt, (e) => { e.preventDefault(); compareDropzone.classList.remove('drag-over'); })
+);
+compareDropzone.addEventListener('drop', (e) => {
+  if (e.dataTransfer.files && e.dataTransfer.files.length) handleCompareFiles(e.dataTransfer.files);
+});
+
+function handleCompareFiles(fileList) {
+  const files = Array.from(fileList);
+  compareStatus.textContent = files.length + ' fichier(s) reçu(s) — traitement en cours…';
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      addCompareItem(file.name, reader.result);
+      remaining--;
+      if (remaining === 0) compareStatus.textContent = 'Traitement terminé.';
+    };
+    reader.onerror = () => {
+      compareStatus.textContent = "Impossible de lire " + file.name + ".";
+      remaining--;
+    };
+    reader.readAsText(file);
+  });
+}
+
+function addCompareItem(name, text) {
+  try {
+    const { meta, xs, ys } = parseJcamp(text);
+    const color = TRACE_COLORS[compareIdSeq % TRACE_COLORS.length];
+    compareItems.push({ id: compareIdSeq++, name, meta, xs, ys, color });
+    renderComparator();
+  } catch (err) {
+    compareStatus.textContent = "Échec sur " + name + " — " + err.message;
+  }
+}
+
+function removeCompareItem(id) {
+  compareItems = compareItems.filter(it => it.id !== id);
+  renderComparator();
+}
+
+function buildMultiTracePaths(items, width, height, padding) {
+  const allXs = items.flatMap(it => it.xs);
+  const allYs = items.flatMap(it => it.ys);
+  const xMin = Math.min(...allXs), xMax = Math.max(...allXs);
+  const yMin = Math.min(...allYs), yMax = Math.max(...allYs);
+  const xSpan = (xMax - xMin) || 1;
+  const ySpan = (yMax - yMin) || 1;
+  const innerW = width - padding * 2;
+  const innerH = height - padding * 2;
+
+  return items.map(it => {
+    let d = '';
+    for (let i = 0; i < it.xs.length; i++) {
+      const px = padding + ((it.xs[i] - xMin) / xSpan) * innerW;
+      const py = padding + innerH - ((it.ys[i] - yMin) / ySpan) * innerH;
+      d += (i === 0 ? 'M' : 'L') + px.toFixed(2) + ',' + py.toFixed(2) + ' ';
+    }
+    return d.trim();
+  });
+}
+
+function renderComparator() {
+  const ns = 'http://www.w3.org/2000/svg';
+  compareChart.innerHTML = '';
+  compareLegend.innerHTML = '';
+
+  if (compareItems.length === 0) {
+    compareEmptyMsg.style.display = 'block';
+    return;
+  }
+  compareEmptyMsg.style.display = 'none';
+
+  const vb = compareChart.viewBox.baseVal;
+  const w = vb.width || 860, h = vb.height || 320, pad = 30;
+
+  const axisX = document.createElementNS(ns, 'line');
+  axisX.setAttribute('x1', pad); axisX.setAttribute('x2', w - pad);
+  axisX.setAttribute('y1', h - pad); axisX.setAttribute('y2', h - pad);
+  axisX.setAttribute('class', 'axis');
+  compareChart.appendChild(axisX);
+
+  const axisY = document.createElementNS(ns, 'line');
+  axisY.setAttribute('x1', pad); axisY.setAttribute('x2', pad);
+  axisY.setAttribute('y1', pad); axisY.setAttribute('y2', h - pad);
+  axisY.setAttribute('class', 'axis');
+  compareChart.appendChild(axisY);
+
+  const paths = buildMultiTracePaths(compareItems, w, h, pad);
+  compareItems.forEach((it, i) => {
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', paths[i]);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', it.color);
+    path.setAttribute('stroke-width', '1.7');
+    path.setAttribute('stroke-linejoin', 'round');
+    path.setAttribute('stroke-linecap', 'round');
+    compareChart.appendChild(path);
+  });
+
+  const allXs = compareItems.flatMap(it => it.xs);
+  const xMin = Math.min(...allXs), xMax = Math.max(...allXs);
+  const xLabelStart = document.createElementNS(ns, 'text');
+  xLabelStart.setAttribute('x', pad); xLabelStart.setAttribute('y', h - pad + 16);
+  xLabelStart.setAttribute('class', 'axis-label');
+  xLabelStart.textContent = Math.round(xMin);
+  compareChart.appendChild(xLabelStart);
+
+  const xLabelEnd = document.createElementNS(ns, 'text');
+  xLabelEnd.setAttribute('x', w - pad); xLabelEnd.setAttribute('y', h - pad + 16);
+  xLabelEnd.setAttribute('class', 'axis-label');
+  xLabelEnd.setAttribute('text-anchor', 'end');
+  xLabelEnd.textContent = Math.round(xMax);
+  compareChart.appendChild(xLabelEnd);
+
+  compareItems.forEach(it => {
+    const chip = document.createElement('div');
+    chip.className = 'legend-chip';
+    chip.innerHTML = `<span class="legend-swatch" style="background:${it.color}"></span>${escapeHtml(it.name)}<button type="button" aria-label="Retirer ${escapeHtml(it.name)}">×</button>`;
+    chip.querySelector('button').addEventListener('click', () => removeCompareItem(it.id));
+    compareLegend.appendChild(chip);
+  });
+}
+
+compareSampleBtn.addEventListener('click', () => {
+  addCompareItem('lot_A_reference.jdx', SAMPLE_JCAMP);
+  addCompareItem('lot_B_variante.jdx', SAMPLE_JCAMP_B);
+});
+
+/* Hero trace: draw sample on load */
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const { xs, ys } = parseJcamp(SAMPLE_JCAMP);
+    renderTrace(document.getElementById('heroTrace'), xs, ys, { animate: true, padding: 16 });
+  } catch (e) { /* silent */ }
+});
+</script>
+
+</body>
+</html>
