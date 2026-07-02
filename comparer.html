@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparateur de spectres — spectra.tools</title>
+<meta name="description" content="Superposez plusieurs spectres JCAMP-DX sur un même graphique pour repérer les écarts, directement dans votre navigateur.">
+<meta property="og:title" content="Comparateur de spectres — spectra.tools">
+<meta property="og:description" content="Superposez et comparez plusieurs spectres de spectroscopie, gratuitement et sans compte.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230D1826'/%3E%3Cpath d='M2 20 L8 20 L11 9 L14 26 L18 14 L21 20 L30 20' fill='none' stroke='%2357C9AC' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .page-header{padding:36px 0 8px;}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="wrap">
+    <a href="index.html" class="wordmark">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M2 20 L8 20 L11 9 L14 26 L18 14 L21 20 L30 20" fill="none" stroke="#57C9AC" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      spectra.tools
+    </a>
+    <div class="nav-links">
+      <a href="convertir.html">Convertir</a>
+      <a href="comparer.html" class="active">Comparer</a>
+      <a href="formulation.html">Formulation</a>
+      <a href="index.html#formats">Formats</a>
+      <a href="index.html#upcoming">Prochains outils</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header class="page-header reveal">
+    <div class="eyebrow">Outil 02 — comparaison de spectres</div>
+    <h1 style="max-width:20ch;">Superposez vos spectres, <span class="accent">repérez les écarts</span> d'un coup d'œil.</h1>
+    <p class="lede">Chargez deux fichiers ou plus pour les afficher sur un même graphique, chacun dans sa couleur, avec une légende pour les identifier et les retirer.</p>
+    <div class="badge-row">
+      <span class="badge"><strong>100% local</strong></span>
+      <span class="badge"><strong>Aucun compte</strong></span>
+      <span class="badge"><strong>Comparaison multi-fichiers</strong></span>
+    </div>
+  </header>
+
+  <section id="comparator" class="reveal">
+    <div class="dropzone" id="compareDropzone">
+      <p><strong>Glissez-déposez</strong> vos fichiers ici</p>
+      <p class="hint">ou</p>
+      <div class="btn-row">
+        <button type="button" id="compareBrowseBtn">Parcourir mes fichiers</button>
+        <button type="button" id="compareSampleBtn" class="secondary">Essayer avec deux exemples</button>
+      </div>
+      <input type="file" id="compareFileInput" accept=".jdx,.dx,.txt" multiple>
+    </div>
+    <p id="compareStatus" role="status" aria-live="polite"></p>
+
+    <div class="compare-panel" id="comparePanel" style="margin-top:20px;">
+      <svg class="compare-chart" id="compareChart" viewBox="0 0 860 320" preserveAspectRatio="none" role="img" aria-label="Superposition des spectres chargés"></svg>
+      <div class="compare-legend" id="compareLegend"></div>
+      <p class="compare-empty" id="compareEmptyMsg">Aucun spectre chargé pour l'instant.</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <p class="section-sub">Besoin d'exporter un seul spectre en CSV/JSON plutôt que de le comparer ? → <a href="convertir.html">Convertisseur</a></p>
+  </section>
+
+  <footer>
+    <p>Prototype — outil de comparaison de fichiers de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).</p>
+  </footer>
+
+</div>
+
+<script src="common.js"></script>
+<script>
+/* =========================================================
+   Comparator
+   ========================================================= */
+const TRACE_COLORS = ['var(--verdigris)', 'var(--brass)', 'var(--danger)', 'var(--slate)', 'var(--plum)'];
+
+const compareDropzone = document.getElementById('compareDropzone');
+const compareFileInput = document.getElementById('compareFileInput');
+const compareBrowseBtn = document.getElementById('compareBrowseBtn');
+const compareSampleBtn = document.getElementById('compareSampleBtn');
+const compareStatus = document.getElementById('compareStatus');
+const compareChart = document.getElementById('compareChart');
+const compareLegend = document.getElementById('compareLegend');
+const compareEmptyMsg = document.getElementById('compareEmptyMsg');
+
+let compareItems = []; // { id, name, xs, ys, color }
+let compareIdSeq = 0;
+
+compareBrowseBtn.addEventListener('click', () => compareFileInput.click());
+compareFileInput.addEventListener('change', (e) => handleCompareFiles(e.target.files));
+
+['dragenter', 'dragover'].forEach(evt =>
+  compareDropzone.addEventListener(evt, (e) => { e.preventDefault(); compareDropzone.classList.add('drag-over'); })
+);
+['dragleave', 'drop'].forEach(evt =>
+  compareDropzone.addEventListener(evt, (e) => { e.preventDefault(); compareDropzone.classList.remove('drag-over'); })
+);
+compareDropzone.addEventListener('drop', (e) => {
+  if (e.dataTransfer.files && e.dataTransfer.files.length) handleCompareFiles(e.dataTransfer.files);
+});
+
+function handleCompareFiles(fileList) {
+  const files = Array.from(fileList);
+  compareStatus.textContent = files.length + ' fichier(s) reçu(s) — traitement en cours…';
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      addCompareItem(file.name, reader.result);
+      remaining--;
+      if (remaining === 0) compareStatus.textContent = 'Traitement terminé.';
+    };
+    reader.onerror = () => {
+      compareStatus.textContent = "Impossible de lire " + file.name + ".";
+      remaining--;
+    };
+    reader.readAsText(file);
+  });
+}
+
+function addCompareItem(name, text) {
+  try {
+    const { meta, xs, ys } = parseJcamp(text);
+    const color = TRACE_COLORS[compareIdSeq % TRACE_COLORS.length];
+    compareItems.push({ id: compareIdSeq++, name, meta, xs, ys, color });
+    renderComparator();
+  } catch (err) {
+    compareStatus.textContent = "Échec sur " + name + " — " + err.message;
+  }
+}
+
+function removeCompareItem(id) {
+  compareItems = compareItems.filter(it => it.id !== id);
+  renderComparator();
+}
+
+function buildMultiTracePaths(items, width, height, padding) {
+  const allXs = items.flatMap(it => it.xs);
+  const allYs = items.flatMap(it => it.ys);
+  const xMin = Math.min(...allXs), xMax = Math.max(...allXs);
+  const yMin = Math.min(...allYs), yMax = Math.max(...allYs);
+  const xSpan = (xMax - xMin) || 1;
+  const ySpan = (yMax - yMin) || 1;
+  const innerW = width - padding * 2;
+  const innerH = height - padding * 2;
+
+  return items.map(it => {
+    let d = '';
+    for (let i = 0; i < it.xs.length; i++) {
+      const px = padding + ((it.xs[i] - xMin) / xSpan) * innerW;
+      const py = padding + innerH - ((it.ys[i] - yMin) / ySpan) * innerH;
+      d += (i === 0 ? 'M' : 'L') + px.toFixed(2) + ',' + py.toFixed(2) + ' ';
+    }
+    return d.trim();
+  });
+}
+
+function renderComparator() {
+  const ns = 'http://www.w3.org/2000/svg';
+  compareChart.innerHTML = '';
+  compareLegend.innerHTML = '';
+
+  if (compareItems.length === 0) {
+    compareEmptyMsg.style.display = 'block';
+    return;
+  }
+  compareEmptyMsg.style.display = 'none';
+
+  const vb = compareChart.viewBox.baseVal;
+  const w = vb.width || 860, h = vb.height || 320, pad = 30;
+
+  const axisX = document.createElementNS(ns, 'line');
+  axisX.setAttribute('x1', pad); axisX.setAttribute('x2', w - pad);
+  axisX.setAttribute('y1', h - pad); axisX.setAttribute('y2', h - pad);
+  axisX.setAttribute('class', 'axis');
+  compareChart.appendChild(axisX);
+
+  const axisY = document.createElementNS(ns, 'line');
+  axisY.setAttribute('x1', pad); axisY.setAttribute('x2', pad);
+  axisY.setAttribute('y1', pad); axisY.setAttribute('y2', h - pad);
+  axisY.setAttribute('class', 'axis');
+  compareChart.appendChild(axisY);
+
+  const paths = buildMultiTracePaths(compareItems, w, h, pad);
+  compareItems.forEach((it, i) => {
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', paths[i]);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', it.color);
+    path.setAttribute('stroke-width', '1.7');
+    path.setAttribute('stroke-linejoin', 'round');
+    path.setAttribute('stroke-linecap', 'round');
+    compareChart.appendChild(path);
+  });
+
+  const allXs = compareItems.flatMap(it => it.xs);
+  const xMin = Math.min(...allXs), xMax = Math.max(...allXs);
+  const xLabelStart = document.createElementNS(ns, 'text');
+  xLabelStart.setAttribute('x', pad); xLabelStart.setAttribute('y', h - pad + 16);
+  xLabelStart.setAttribute('class', 'axis-label');
+  xLabelStart.textContent = Math.round(xMin);
+  compareChart.appendChild(xLabelStart);
+
+  const xLabelEnd = document.createElementNS(ns, 'text');
+  xLabelEnd.setAttribute('x', w - pad); xLabelEnd.setAttribute('y', h - pad + 16);
+  xLabelEnd.setAttribute('class', 'axis-label');
+  xLabelEnd.setAttribute('text-anchor', 'end');
+  xLabelEnd.textContent = Math.round(xMax);
+  compareChart.appendChild(xLabelEnd);
+
+  compareItems.forEach(it => {
+    const chip = document.createElement('div');
+    chip.className = 'legend-chip';
+    chip.innerHTML = `<span class="legend-swatch" style="background:${it.color}"></span>${escapeHtml(it.name)}<button type="button" aria-label="Retirer ${escapeHtml(it.name)}">×</button>`;
+    chip.querySelector('button').addEventListener('click', () => removeCompareItem(it.id));
+    compareLegend.appendChild(chip);
+  });
+}
+
+compareSampleBtn.addEventListener('click', () => {
+  addCompareItem('lot_A_reference.jdx', SAMPLE_JCAMP);
+  addCompareItem('lot_B_variante.jdx', SAMPLE_JCAMP_B);
+});
+</script>
+
+</body>
+</html>

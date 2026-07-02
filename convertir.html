@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convertisseur JCAMP-DX — spectra.tools</title>
+<meta name="description" content="Convertissez vos spectres JCAMP-DX (.jdx, .dx) en CSV ou JSON directement dans votre navigateur. Aucun compte, aucun envoi de fichier sur un serveur.">
+<meta property="og:title" content="Convertisseur JCAMP-DX — spectra.tools">
+<meta property="og:description" content="Convertissez vos spectres de spectroscopie en CSV ou JSON, gratuitement et sans compte.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230D1826'/%3E%3Cpath d='M2 20 L8 20 L11 9 L14 26 L18 14 L21 20 L30 20' fill='none' stroke='%2357C9AC' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  .page-header{padding:36px 0 8px;}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="wrap">
+    <a href="index.html" class="wordmark">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M2 20 L8 20 L11 9 L14 26 L18 14 L21 20 L30 20" fill="none" stroke="#57C9AC" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      spectra.tools
+    </a>
+    <div class="nav-links">
+      <a href="convertir.html" class="active">Convertir</a>
+      <a href="comparer.html">Comparer</a>
+      <a href="formulation.html">Formulation</a>
+      <a href="index.html#formats">Formats</a>
+      <a href="index.html#upcoming">Prochains outils</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header class="page-header reveal">
+    <div class="eyebrow">Outil 01 — conversion de spectres</div>
+    <h1 style="max-width:20ch;">Vos spectres JCAMP&#8209;DX, <span class="accent">propres et lisibles</span>.</h1>
+    <p class="lede">Déposez un ou plusieurs fichiers <strong>.jdx</strong> / <strong>.dx</strong>. L'outil décode l'en-tête, reconstruit les points X/Y — y compris les formats compressés SQZ/DIF/DUP — et vous rend des fichiers exploitables tout de suite.</p>
+    <div class="badge-row">
+      <span class="badge"><strong>100% local</strong></span>
+      <span class="badge"><strong>Aucun compte</strong></span>
+      <span class="badge"><strong>Traitement par lot</strong></span>
+    </div>
+  </header>
+
+  <section id="upload-section" class="reveal">
+    <p class="section-sub">Formats acceptés : JCAMP-DX (.jdx, .dx) — blocs XYDATA (X++(Y..Y)) et XYPOINTS.</p>
+
+    <div class="dropzone" id="dropzone">
+      <p><strong>Glissez-déposez</strong> vos fichiers ici</p>
+      <p class="hint">ou</p>
+      <div class="btn-row">
+        <button type="button" id="browseBtn">Parcourir mes fichiers</button>
+        <button type="button" id="sampleBtn" class="secondary">Essayer avec un exemple</button>
+      </div>
+      <input type="file" id="fileInput" accept=".jdx,.dx,.txt" multiple>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+
+    <div class="results" id="results"></div>
+    <div class="zip-row" id="zipRow" style="display:none;">
+      <button type="button" id="zipBtn" class="secondary">Télécharger tout (.zip)</button>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <p class="section-sub">Envie de superposer plusieurs spectres au lieu de les convertir un par un ? → <a href="comparer.html">Comparateur</a></p>
+  </section>
+
+  <footer>
+    <p>Prototype — outil de conversion de fichiers de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).</p>
+  </footer>
+
+</div>
+
+<script src="common.js"></script>
+<script>
+/* =========================================================
+   UI wiring — converter
+   ========================================================= */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const browseBtn = document.getElementById('browseBtn');
+const sampleBtn = document.getElementById('sampleBtn');
+const statusEl = document.getElementById('status');
+const resultsEl = document.getElementById('results');
+const zipRow = document.getElementById('zipRow');
+const zipBtn = document.getElementById('zipBtn');
+
+let processed = []; // { name, meta, xs, ys } for zip export
+
+browseBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+['dragenter', 'dragover'].forEach(evt =>
+  dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); })
+);
+['dragleave', 'drop'].forEach(evt =>
+  dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('drag-over'); })
+);
+dropzone.addEventListener('drop', (e) => {
+  if (e.dataTransfer.files && e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(fileList) {
+  const files = Array.from(fileList);
+  statusEl.textContent = files.length + ' fichier(s) reçu(s) — traitement en cours…';
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      processOne(file.name, reader.result);
+      remaining--;
+      if (remaining === 0) statusEl.textContent = 'Traitement terminé.';
+    };
+    reader.onerror = () => {
+      renderErrorCard(file.name, "Impossible de lire le fichier.");
+      remaining--;
+    };
+    reader.readAsText(file);
+  });
+}
+
+function processOne(name, text) {
+  try {
+    const { meta, xs, ys } = parseJcamp(text);
+    processed.push({ name, meta, xs, ys });
+    renderFileCard(name, meta, xs, ys);
+    zipRow.style.display = processed.length > 1 ? 'flex' : 'none';
+  } catch (err) {
+    renderErrorCard(name, err.message);
+  }
+}
+
+function metaRow(k, v) {
+  return v ? '<tr><td class="k">' + k + '</td><td>' + v + '</td></tr>' : '';
+}
+
+function renderFileCard(name, meta, xs, ys) {
+  const card = document.createElement('div');
+  card.className = 'file-card';
+  const svgId = 'trace-' + Math.random().toString(36).slice(2, 9);
+  card.innerHTML = `
+    <div class="file-card-head">
+      <div>
+        <div class="file-name">${escapeHtml(name)}</div>
+        <div class="file-meta-line">${xs.length} points décodés</div>
+      </div>
+    </div>
+    <svg class="mini-trace" id="${svgId}" viewBox="0 0 800 140" preserveAspectRatio="none" role="img" aria-label="Aperçu du spectre ${escapeHtml(name)}"></svg>
+    <table class="meta-table">
+      ${metaRow('Titre', meta['TITLE'])}
+      ${metaRow('Type', meta['DATA TYPE'])}
+      ${metaRow('Origine', meta['ORIGIN'])}
+      ${metaRow('Unités X', meta['XUNITS'])}
+      ${metaRow('Unités Y', meta['YUNITS'])}
+      ${metaRow('Points', meta['NPOINTS'])}
+    </table>
+    <div class="card-actions">
+      <button type="button" class="secondary" data-action="csv">Télécharger CSV</button>
+      <button type="button" class="secondary" data-action="json">Télécharger JSON</button>
+    </div>
+  `;
+  resultsEl.appendChild(card);
+  renderTrace(document.getElementById(svgId), xs, ys, { padding: 10 });
+
+  const xLabel = meta['XUNITS'] || 'x';
+  const yLabel = meta['YUNITS'] || 'y';
+  card.querySelector('[data-action="csv"]').addEventListener('click', () => {
+    download(baseName(name) + '.csv', toCSV(xs, ys, xLabel, yLabel), 'text/csv');
+  });
+  card.querySelector('[data-action="json"]').addEventListener('click', () => {
+    download(baseName(name) + '.json', toJSON(meta, xs, ys), 'application/json');
+  });
+}
+
+function renderErrorCard(name, message) {
+  const card = document.createElement('div');
+  card.className = 'file-card error';
+  card.innerHTML = `
+    <div class="file-card-head">
+      <div>
+        <div class="file-name">${escapeHtml(name)}</div>
+        <div class="error-msg">Échec du décodage — ${escapeHtml(message)}</div>
+      </div>
+    </div>
+  `;
+  resultsEl.appendChild(card);
+}
+
+zipBtn.addEventListener('click', async () => {
+  if (!window.JSZip) { statusEl.textContent = "JSZip indisponible."; return; }
+  const zip = new JSZip();
+  processed.forEach(p => {
+    const xLabel = p.meta['XUNITS'] || 'x', yLabel = p.meta['YUNITS'] || 'y';
+    zip.file(baseName(p.name) + '.csv', toCSV(p.xs, p.ys, xLabel, yLabel));
+    zip.file(baseName(p.name) + '.json', toJSON(p.meta, p.xs, p.ys));
+  });
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'spectres_convertis.zip';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+sampleBtn.addEventListener('click', () => processOne('exemple_polymere.jdx', SAMPLE_JCAMP));
+</script>
+
+</body>
+</html>

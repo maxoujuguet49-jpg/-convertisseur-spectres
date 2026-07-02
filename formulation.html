@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur de formulation — spectra.tools</title>
+<meta name="description" content="Définissez vos composants et des règles simples reliant leur dosage à des propriétés estimées. Curseurs en direct, dans votre navigateur.">
+<meta property="og:title" content="Calculateur de formulation — spectra.tools">
+<meta property="og:description" content="Un calculateur de formulation paramétrable pour explorer des compromis de composition, gratuitement et sans compte.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230D1826'/%3E%3Cpath d='M2 20 L8 20 L11 9 L14 26 L18 14 L21 20 L30 20' fill='none' stroke='%2357C9AC' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .page-header{padding:36px 0 8px;}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="wrap">
+    <a href="index.html" class="wordmark">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M2 20 L8 20 L11 9 L14 26 L18 14 L21 20 L30 20" fill="none" stroke="#57C9AC" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      spectra.tools
+    </a>
+    <div class="nav-links">
+      <a href="convertir.html">Convertir</a>
+      <a href="comparer.html">Comparer</a>
+      <a href="formulation.html" class="active">Formulation</a>
+      <a href="index.html#formats">Formats</a>
+      <a href="index.html#upcoming">Prochains outils</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header class="page-header reveal">
+    <div class="eyebrow">Outil 03 — calculateur de formulation</div>
+    <h1 style="max-width:22ch;">Ajustez vos dosages, <span class="accent">visualisez l'effet</span> en direct.</h1>
+    <p class="lede">Définissez vos composants et des règles simples reliant leur dosage à des propriétés estimées. Ajustez les curseurs pour explorer des compromis.</p>
+    <div class="badge-row">
+      <span class="badge"><strong>100% local</strong></span>
+      <span class="badge"><strong>Aucun compte</strong></span>
+      <span class="badge"><strong>Import / export JSON</strong></span>
+    </div>
+  </header>
+
+  <section id="formulation" class="reveal">
+    <p class="disclaimer">⚠ Modèle linéaire à règles que <em>vous</em> définissez — pas une simulation physico-chimique. Utile pour explorer des tendances et préparer un plan d'essais, pas pour remplacer des mesures réelles.</p>
+
+    <div class="config-block">
+      <h3>Composants</h3>
+      <p class="config-hint">Nom, unité, et plage de dosage possible pour chacun.</p>
+      <div style="overflow-x:auto;">
+        <table class="config-table" id="componentsTable">
+          <thead><tr><th>Nom</th><th>Unité</th><th>Min</th><th>Max</th><th>Valeur de départ</th><th></th></tr></thead>
+          <tbody id="componentsBody"></tbody>
+        </table>
+      </div>
+      <button type="button" class="secondary add-row-btn" id="addComponentBtn">+ Ajouter un composant</button>
+    </div>
+
+    <div class="config-block">
+      <h3>Propriétés estimées</h3>
+      <p class="config-hint">Valeur de base, puis contribution de chaque composant par unité de dosage. Cible optionnelle (zone verte du curseur de résultat).</p>
+      <div style="overflow-x:auto;">
+        <table class="config-table" id="propertiesTable">
+          <thead><tr id="propertiesHeadRow"><th>Nom</th><th>Unité</th><th>Base</th></tr></thead>
+          <tbody id="propertiesBody"></tbody>
+        </table>
+      </div>
+      <button type="button" class="secondary add-row-btn" id="addPropertyBtn">+ Ajouter une propriété</button>
+    </div>
+
+    <div class="config-actions">
+      <button type="button" class="secondary" id="loadSampleFormulaBtn">Charger un exemple</button>
+      <button type="button" class="ghost" id="exportConfigBtn">Exporter la config (.json)</button>
+      <button type="button" class="ghost" id="importConfigBtn">Importer une config (.json)</button>
+      <input type="file" id="formulaImportInput" accept=".json">
+    </div>
+
+    <h3 style="font-family:var(--font-display);font-size:19px;margin:32px 0 14px;">Simulateur</h3>
+    <div class="sim-grid">
+      <div>
+        <div id="slidersPanel"></div>
+      </div>
+      <div>
+        <div id="resultsPanel"></div>
+        <button type="button" class="ghost" id="exportMixBtn" style="margin-top:4px;">Exporter ce mix (.csv)</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Prototype — calculateur de formulation à règles paramétrables. Pas une simulation physico-chimique.</p>
+  </footer>
+
+</div>
+
+<script src="common.js"></script>
+<script>
+/* =========================================================
+   Formulation calculator
+   ========================================================= */
+let compIdSeq = 0, propIdSeq = 0;
+let formComponents = [];
+let formProperties = [];
+let formValues = {}; // componentId -> current dosage
+
+const componentsBody = document.getElementById('componentsBody');
+const propertiesHeadRow = document.getElementById('propertiesHeadRow');
+const propertiesBody = document.getElementById('propertiesBody');
+const slidersPanel = document.getElementById('slidersPanel');
+const resultsPanel = document.getElementById('resultsPanel');
+
+function newComponent(name, unit, min, max, val) {
+  const id = 'c' + (compIdSeq++);
+  formComponents.push({ id, name, unit, min, max });
+  formValues[id] = val;
+  formProperties.forEach(p => { if (!(id in p.coeffs)) p.coeffs[id] = 0; });
+  return id;
+}
+function newProperty(name, unit, base, coeffs, targetMin, targetMax) {
+  const id = 'p' + (propIdSeq++);
+  const fullCoeffs = {};
+  formComponents.forEach(c => fullCoeffs[c.id] = (coeffs && coeffs[c.id]) || 0);
+  formProperties.push({ id, name, unit, base, coeffs: fullCoeffs, targetMin: targetMin ?? null, targetMax: targetMax ?? null });
+  return id;
+}
+
+function computePropertyValue(prop) {
+  let total = prop.base;
+  for (const c of formComponents) total += (prop.coeffs[c.id] || 0) * (formValues[c.id] || 0);
+  return total;
+}
+function propertyTheoreticalRange(prop) {
+  let min = prop.base, max = prop.base;
+  for (const c of formComponents) {
+    const coeff = prop.coeffs[c.id] || 0;
+    if (coeff >= 0) { min += coeff * c.min; max += coeff * c.max; }
+    else { min += coeff * c.max; max += coeff * c.min; }
+  }
+  if (min === max) { min -= 1; max += 1; }
+  return { min, max };
+}
+
+function renderAll() {
+  renderComponentsTable();
+  renderPropertiesTable();
+  renderSliders();
+  renderResults();
+}
+
+function renderComponentsTable() {
+  componentsBody.innerHTML = '';
+  formComponents.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" value="${escapeHtml(c.name)}" data-field="name"></td>
+      <td><input type="text" value="${escapeHtml(c.unit)}" data-field="unit" style="width:64px;"></td>
+      <td><input type="number" value="${c.min}" data-field="min" style="width:64px;"></td>
+      <td><input type="number" value="${c.max}" data-field="max" style="width:64px;"></td>
+      <td><input type="number" value="${formValues[c.id]}" data-field="start" style="width:64px;"></td>
+      <td><button type="button" class="row-remove" aria-label="Supprimer">×</button></td>
+    `;
+    tr.querySelector('[data-field="name"]').addEventListener('input', e => { c.name = e.target.value; renderPropertiesTable(); renderSliders(); });
+    tr.querySelector('[data-field="unit"]').addEventListener('input', e => { c.unit = e.target.value; renderSliders(); });
+    tr.querySelector('[data-field="min"]').addEventListener('input', e => { c.min = parseFloat(e.target.value) || 0; renderSliders(); renderResults(); });
+    tr.querySelector('[data-field="max"]').addEventListener('input', e => { c.max = parseFloat(e.target.value) || 0; renderSliders(); renderResults(); });
+    tr.querySelector('[data-field="start"]').addEventListener('input', e => { formValues[c.id] = parseFloat(e.target.value) || 0; renderSliders(); renderResults(); });
+    tr.querySelector('.row-remove').addEventListener('click', () => {
+      formComponents = formComponents.filter(x => x.id !== c.id);
+      delete formValues[c.id];
+      formProperties.forEach(p => delete p.coeffs[c.id]);
+      renderAll();
+    });
+    componentsBody.appendChild(tr);
+  });
+}
+
+function renderPropertiesTable() {
+  propertiesHeadRow.innerHTML = '<th>Nom</th><th>Unité</th><th>Base</th>';
+  formComponents.forEach(c => {
+    const th = document.createElement('th');
+    th.textContent = c.name || '(sans nom)';
+    propertiesHeadRow.appendChild(th);
+  });
+  const extraTh = document.createElement('th');
+  extraTh.innerHTML = 'Cible min / max';
+  propertiesHeadRow.appendChild(extraTh);
+  propertiesHeadRow.appendChild(document.createElement('th'));
+
+  propertiesBody.innerHTML = '';
+  formProperties.forEach(p => {
+    const tr = document.createElement('tr');
+    let coeffCells = '';
+    formComponents.forEach(c => {
+      coeffCells += `<td><input type="number" step="any" value="${p.coeffs[c.id] || 0}" data-coeff="${c.id}" style="width:60px;"></td>`;
+    });
+    tr.innerHTML = `
+      <td><input type="text" value="${escapeHtml(p.name)}" data-field="name" style="width:120px;"></td>
+      <td><input type="text" value="${escapeHtml(p.unit)}" data-field="unit" style="width:60px;"></td>
+      <td><input type="number" step="any" value="${p.base}" data-field="base" style="width:64px;"></td>
+      ${coeffCells}
+      <td style="display:flex;gap:4px;">
+        <input type="number" step="any" placeholder="min" value="${p.targetMin ?? ''}" data-field="targetMin" style="width:56px;">
+        <input type="number" step="any" placeholder="max" value="${p.targetMax ?? ''}" data-field="targetMax" style="width:56px;">
+      </td>
+      <td><button type="button" class="row-remove" aria-label="Supprimer">×</button></td>
+    `;
+    tr.querySelector('[data-field="name"]').addEventListener('input', e => { p.name = e.target.value; renderResults(); });
+    tr.querySelector('[data-field="unit"]').addEventListener('input', e => { p.unit = e.target.value; renderResults(); });
+    tr.querySelector('[data-field="base"]').addEventListener('input', e => { p.base = parseFloat(e.target.value) || 0; renderResults(); });
+    tr.querySelector('[data-field="targetMin"]').addEventListener('input', e => { p.targetMin = e.target.value === '' ? null : parseFloat(e.target.value); renderResults(); });
+    tr.querySelector('[data-field="targetMax"]').addEventListener('input', e => { p.targetMax = e.target.value === '' ? null : parseFloat(e.target.value); renderResults(); });
+    tr.querySelectorAll('[data-coeff]').forEach(inp => {
+      inp.addEventListener('input', e => { p.coeffs[e.target.dataset.coeff] = parseFloat(e.target.value) || 0; renderResults(); });
+    });
+    tr.querySelector('.row-remove').addEventListener('click', () => {
+      formProperties = formProperties.filter(x => x.id !== p.id);
+      renderResults();
+    });
+    propertiesBody.appendChild(tr);
+  });
+}
+
+function renderSliders() {
+  slidersPanel.innerHTML = '';
+  formComponents.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'slider-row';
+    row.innerHTML = `
+      <div class="slider-label"><span>${escapeHtml(c.name)}</span><span class="val">${formValues[c.id]} ${escapeHtml(c.unit)}</span></div>
+      <input type="range" min="${c.min}" max="${c.max}" step="any" value="${formValues[c.id]}">
+    `;
+    row.querySelector('input[type="range"]').addEventListener('input', e => {
+      formValues[c.id] = parseFloat(e.target.value);
+      row.querySelector('.val').textContent = formatNum(formValues[c.id]) + ' ' + c.unit;
+      renderResults();
+    });
+    slidersPanel.appendChild(row);
+  });
+}
+
+function formatNum(n) { return Math.round(n * 100) / 100; }
+
+function renderResults() {
+  resultsPanel.innerHTML = '';
+  if (formProperties.length === 0) {
+    resultsPanel.innerHTML = '<p class="compare-empty" style="text-align:left;padding:8px 0;">Ajoutez une propriété pour voir un résultat.</p>';
+    return;
+  }
+  formProperties.forEach(p => {
+    const value = computePropertyValue(p);
+    const range = propertyTheoreticalRange(p);
+    const span = range.max - range.min || 1;
+    let pos = ((value - range.min) / span) * 100;
+    pos = Math.max(0, Math.min(100, pos));
+
+    const inTarget = p.targetMin !== null && p.targetMax !== null
+      ? (value >= p.targetMin && value <= p.targetMax)
+      : null;
+
+    let bandStyle = '';
+    if (p.targetMin !== null && p.targetMax !== null) {
+      const bandStart = Math.max(0, Math.min(100, ((p.targetMin - range.min) / span) * 100));
+      const bandEnd = Math.max(0, Math.min(100, ((p.targetMax - range.min) / span) * 100));
+      bandStyle = `left:${bandStart}%;width:${Math.max(0, bandEnd - bandStart)}%;`;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    card.innerHTML = `
+      <div class="result-head">
+        <span class="name">${escapeHtml(p.name)}</span>
+        <span class="value">${formatNum(value)} ${escapeHtml(p.unit)}</span>
+      </div>
+      <div class="gauge">
+        ${p.targetMin !== null && p.targetMax !== null ? `<div class="gauge-target-band" style="${bandStyle}"></div>` : ''}
+        <div class="gauge-fill ${inTarget === null ? '' : (inTarget ? 'in-target' : 'out-target')}" style="left:${pos}%;"></div>
+      </div>
+      <div class="gauge-range-labels"><span>${formatNum(range.min)}</span><span>${formatNum(range.max)}</span></div>
+    `;
+    resultsPanel.appendChild(card);
+  });
+}
+
+document.getElementById('addComponentBtn').addEventListener('click', () => {
+  newComponent('Nouveau composant', '%', 0, 100, 0);
+  renderAll();
+});
+document.getElementById('addPropertyBtn').addEventListener('click', () => {
+  newProperty('Nouvelle propriété', '', 0, {}, null, null);
+  renderPropertiesTable();
+  renderResults();
+});
+
+document.getElementById('loadSampleFormulaBtn').addEventListener('click', () => {
+  formComponents = []; formProperties = []; formValues = {}; compIdSeq = 0; propIdSeq = 0;
+  const resine = newComponent('Résine', '%', 0, 100, 40);
+  const durc = newComponent('Durcisseur', '%', 0, 100, 20);
+  const charge = newComponent('Charge minérale', '%', 0, 100, 30);
+  const plast = newComponent('Plastifiant', '%', 0, 20, 10);
+  newProperty('Viscosité', 'Pa·s', 0.5, { [resine]: 0.02, [durc]: 0.01, [charge]: 0.05, [plast]: -0.03 }, 1, 4);
+  newProperty('Dureté', 'Shore D', 20, { [resine]: 0.6, [durc]: 0.3, [charge]: 0.1, [plast]: -0.4 }, 55, 75);
+  newProperty('Coût estimé', '€/kg', 0, { [resine]: 0.08, [durc]: 0.12, [charge]: 0.02, [plast]: 0.05 }, null, null);
+  renderAll();
+});
+
+document.getElementById('exportConfigBtn').addEventListener('click', () => {
+  const config = { components: formComponents, properties: formProperties, values: formValues };
+  download('formulation_config.json', JSON.stringify(config, null, 2), 'application/json');
+});
+
+document.getElementById('importConfigBtn').addEventListener('click', () => document.getElementById('formulaImportInput').click());
+document.getElementById('formulaImportInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const config = JSON.parse(reader.result);
+      formComponents = (config.components || []).map(c => ({
+        id: c.id || ('c' + (compIdSeq++)),
+        name: c.name || 'Composant',
+        unit: c.unit || '',
+        min: typeof c.min === 'number' ? c.min : 0,
+        max: typeof c.max === 'number' ? c.max : 100,
+      }));
+      formValues = {};
+      formComponents.forEach(c => {
+        const v = config.values && typeof config.values[c.id] === 'number' ? config.values[c.id] : c.min;
+        formValues[c.id] = v;
+      });
+      formProperties = (config.properties || []).map(p => {
+        const coeffs = {};
+        formComponents.forEach(c => { coeffs[c.id] = (p.coeffs && typeof p.coeffs[c.id] === 'number') ? p.coeffs[c.id] : 0; });
+        return {
+          id: p.id || ('p' + (propIdSeq++)),
+          name: p.name || 'Propriété',
+          unit: p.unit || '',
+          base: typeof p.base === 'number' ? p.base : 0,
+          coeffs,
+          targetMin: typeof p.targetMin === 'number' ? p.targetMin : null,
+          targetMax: typeof p.targetMax === 'number' ? p.targetMax : null,
+        };
+      });
+      compIdSeq = formComponents.length; propIdSeq = formProperties.length;
+      renderAll();
+    } catch (err) {
+      alert("Fichier de configuration invalide.");
+    }
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('exportMixBtn').addEventListener('click', () => {
+  let csv = 'composant,dosage,unite\n';
+  formComponents.forEach(c => { csv += `${c.name},${formValues[c.id]},${c.unit}\n`; });
+  csv += '\npropriete,valeur,unite\n';
+  formProperties.forEach(p => { csv += `${p.name},${formatNum(computePropertyValue(p))},${p.unit}\n`; });
+  download('mix_formulation.csv', csv, 'text/csv');
+});
+
+// initial empty state render
+renderAll();
+</script>
+
+</body>
+</html>
