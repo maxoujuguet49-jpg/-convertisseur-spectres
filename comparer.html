@@ -189,7 +189,7 @@ function renderComparator() {
   compareEmptyMsg.style.display = 'none';
 
   const vb = compareChart.viewBox.baseVal;
-  const w = vb.width || 860, h = vb.height || 320, pad = 34;
+  const w = vb.width || 860, h = vb.height || 320, pad = 40;
 
   const axisX = document.createElementNS(ns, 'line');
   axisX.setAttribute('x1', pad); axisX.setAttribute('x2', w - pad);
@@ -213,11 +213,18 @@ function renderComparator() {
 
   // functional group reference bands, drawn behind the traces
   const relevantGroups = getRelevantGroups(xMin, xMax);
-  relevantGroups.forEach(g => {
-    const gx = xToPx(g.center);
+  const laidOutGroups = layoutAnnotationLanes(
+    relevantGroups.map(g => Object.assign({}, g, { px: xToPx(g.center) })),
+    g => g.px,
+    g => g.label.length * 6 + 6,
+    5
+  );
+  laidOutGroups.forEach(g => {
+    const gx = g.px;
+    const laneY = pad - 8 - g.lane * 11;
     const line = document.createElementNS(ns, 'line');
     line.setAttribute('x1', gx); line.setAttribute('x2', gx);
-    line.setAttribute('y1', pad); line.setAttribute('y2', h - pad);
+    line.setAttribute('y1', laneY + 4); line.setAttribute('y2', h - pad);
     line.setAttribute('stroke', g.color);
     line.setAttribute('stroke-width', '1');
     line.setAttribute('stroke-dasharray', '3 3');
@@ -225,7 +232,7 @@ function renderComparator() {
     compareChart.appendChild(line);
 
     const label = document.createElementNS(ns, 'text');
-    label.setAttribute('x', gx); label.setAttribute('y', pad - 6);
+    label.setAttribute('x', gx); label.setAttribute('y', laneY - 2);
     label.setAttribute('text-anchor', 'middle');
     label.setAttribute('class', 'axis-label');
     label.setAttribute('fill', g.color);

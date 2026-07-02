@@ -522,8 +522,12 @@ function render3DFromItems(containerId, items) {
   const group = new THREE.Group();
 
   // functional group reference planes, drawn first so traces render in front
-  getRelevantGroups(xMin, xMax).forEach(g => {
-    const gx = ((g.center - xMin) / xSpan - 0.5) * spread;
+  const relevantGroups3D = getRelevantGroups(xMin, xMax).map(g =>
+    Object.assign({}, g, { gx: ((g.center - xMin) / xSpan - 0.5) * spread })
+  );
+  const laidOutGroups3D = layoutAnnotationLanes(relevantGroups3D, g => g.gx, () => 1.1, 0.15);
+  laidOutGroups3D.forEach(g => {
+    const gx = g.gx;
     const planeGeo = new THREE.PlaneGeometry(0.015, heightScale * 1.15);
     const planeMat = new THREE.MeshBasicMaterial({ color: g.color, transparent: true, opacity: 0.16, side: THREE.DoubleSide });
     for (let zz = 0; zz >= -zSpan; zz -= depthStep) {
@@ -532,7 +536,7 @@ function render3DFromItems(containerId, items) {
       group.add(seg);
     }
     const label = makeTextSprite(g.label, g.color);
-    label.position.set(gx, heightScale * 1.18, 0);
+    label.position.set(gx, heightScale * (1.18 + g.lane * 0.22), 0);
     group.add(label);
   });
 
@@ -581,29 +585,19 @@ function render3DFromItems(containerId, items) {
   scene.add(group);
 
   const dist = 4.5 + items.length * 0.35;
-  camera.position.set(0, 3, dist);
-  camera.lookAt(0, 0.6, 0);
+  camera.position.set(2.2, 2.6, dist);
+  camera.lookAt(0, 0.6, -zSpan / 2);
 
-  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function resize() {
     const w = container.clientWidth, h = container.clientHeight;
     if (!w || !h) return;
     camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
+    renderer.render(scene, camera);
   }
   window.addEventListener('resize', resize);
   resize();
 
-  let stopped = false;
-  function animate() {
-    if (stopped) return;
-    if (!reduceMotion) group.rotation.y += 0.004;
-    renderer.render(scene, camera);
-    container._rafId = requestAnimationFrame(animate);
-  }
-  animate();
   container._stopAnim = () => {
-    stopped = true;
-    if (container._rafId) cancelAnimationFrame(container._rafId);
     window.removeEventListener('resize', resize);
     renderer.dispose();
     try { renderer.forceContextLoss(); } catch (e) { /* not fatal if unsupported */ }
@@ -698,4 +692,26 @@ function getRelevantGroups(xMin, xMax) {
       const center = Math.max(lo, Math.min(hi, mid));
       return Object.assign({}, g, { center });
     });
+}
+
+/* Assigns a vertical "lane" (0, 1, 2...) to each item so that labels whose
+   horizontal footprint would overlap get stacked instead of collapsing
+   into each other. getX/getWidth are accessor functions in the caller's
+   coordinate space (pixels for 2D, world units for 3D). */
+function layoutAnnotationLanes(items, getX, getWidth, gap) {
+  const sorted = items.slice().sort((a, b) => getX(a) - getX(b));
+  const laneRightEdge = [];
+  return sorted.map(item => {
+    const x = getX(item), halfW = getWidth(item) / 2;
+    let lane = 0;
+    while (lane < 8) {
+      const rightEdge = laneRightEdge[lane];
+      if (rightEdge === undefined || x - halfW >= rightEdge + gap) {
+        laneRightEdge[lane] = x + halfW;
+        break;
+      }
+      lane++;
+    }
+    return Object.assign({}, item, { lane: Math.min(lane, 2) });
+  });
 }
