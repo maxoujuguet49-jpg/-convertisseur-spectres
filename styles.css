@@ -151,6 +151,43 @@
   #moleculeCanvas{width:100%;aspect-ratio:16/11;border-radius:2px;overflow:hidden;}
   #moleculeCanvas canvas{display:block;width:100% !important;height:100% !important;}
 
+  .waterfall-panel{
+    border:1px solid var(--grid);
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:16px 16px 8px;
+    margin-top:16px;
+  }
+  .waterfall-panel .label{
+    font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);
+    display:flex;justify-content:space-between;margin-bottom:4px;
+  }
+  #waterfallCanvas{width:100%;aspect-ratio:16/8;border-radius:2px;overflow:hidden;}
+  #waterfallCanvas canvas{display:block;width:100% !important;height:100% !important;}
+
+  .groups-panel{
+    border:1px solid var(--grid);background:var(--surface);border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .groups-panel .label{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);margin-bottom:10px;}
+  .groups-list{display:flex;flex-direction:column;gap:7px;}
+  .groups-list .row{display:flex;align-items:baseline;gap:10px;font-size:13px;}
+  .groups-list .swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+  .groups-list .name{font-family:var(--font-mono);font-weight:600;width:52px;flex-shrink:0;}
+  .groups-list .range{color:var(--ink-soft);font-family:var(--font-mono);font-size:12px;}
+
+  .icon-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;margin-top:24px;}
+  .icon-item{
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;
+    padding:16px 8px;border:1px solid var(--grid);background:var(--surface);border-radius:var(--radius);
+    backdrop-filter: blur(12px) saturate(150%);
+  }
+  .icon-item svg{width:22px;height:22px;stroke:var(--verdigris);}
+  .icon-item span{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);letter-spacing:.01em;}
+
+  .explainer-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-top:8px;}
+  @media (max-width:760px){ .explainer-grid{grid-template-columns:1fr;} }
+
   .trace-panel{
     border:1px solid var(--grid);
     background:var(--surface);

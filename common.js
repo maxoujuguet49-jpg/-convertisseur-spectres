@@ -334,3 +334,123 @@ function initMoleculeScene() {
   animate();
 }
 
+/* =========================================================
+   3D waterfall spectrum (home page signature visual)
+   ========================================================= */
+function generateWaterfallRow(xMin, xMax, nPoints, seed) {
+  const peaks = [
+    { center: xMin + (xMax - xMin) * 0.15, height: 0.8 + 0.3 * Math.sin(seed * 1.3), width: 90 },
+    { center: xMin + (xMax - xMin) * 0.35, height: 0.55 + 0.2 * Math.sin(seed * 2.1), width: 70 },
+    { center: xMin + (xMax - xMin) * 0.55, height: 0.9 + 0.25 * Math.sin(seed * 0.7), width: 60 },
+    { center: xMin + (xMax - xMin) * 0.72, height: 0.4 + 0.15 * Math.sin(seed * 1.9), width: 50 },
+    { center: xMin + (xMax - xMin) * 0.88, height: 0.65 + 0.2 * Math.sin(seed * 2.6), width: 80 },
+  ];
+  const xs = [], ys = [];
+  for (let i = 0; i < nPoints; i++) {
+    const x = xMin + (xMax - xMin) * (i / (nPoints - 1));
+    let y = 0.05;
+    for (const p of peaks) y += p.height * Math.exp(-Math.pow((x - p.center) / p.width, 2));
+    xs.push(x); ys.push(y);
+  }
+  return { xs, ys };
+}
+
+function rainbowHue(t) {
+  return 0.66 * (1 - Math.max(0, Math.min(1, t)));
+}
+
+function initWaterfallScene(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container || typeof THREE === 'undefined') return;
+
+  const N_TRACES = 24, N_POINTS = 70;
+  const xMin = 400, xMax = 4000;
+  const spread = 7;
+  const depthStep = 0.16;
+  const rise = 0.05;
+  const heightScale = 1.1;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight || 1.7, 0.1, 100);
+  camera.position.set(0, 3.6, 7.2);
+  camera.lookAt(0, 0.4, -1.2);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+
+  const group = new THREE.Group();
+  const sparkPositions = [];
+
+  for (let row = 0; row < N_TRACES; row++) {
+    const { xs, ys } = generateWaterfallRow(xMin, xMax, N_POINTS, row * 0.37 + 1);
+    const positions = new Float32Array(N_POINTS * 3);
+    const colors = new Float32Array(N_POINTS * 3);
+    const z = -row * depthStep;
+    const yOffset = row * rise;
+
+    let maxY = -Infinity, maxIdx = 0;
+    for (let i = 0; i < N_POINTS; i++) {
+      const t = i / (N_POINTS - 1);
+      const px = (t - 0.5) * spread;
+      const py = ys[i] * heightScale + yOffset;
+      positions[i * 3] = px;
+      positions[i * 3 + 1] = py;
+      positions[i * 3 + 2] = z;
+
+      const hue = rainbowHue(t);
+      const color = new THREE.Color();
+      color.setHSL(hue, 0.75, 0.55);
+      colors[i * 3] = color.r; colors[i * 3 + 1] = color.g; colors[i * 3 + 2] = color.b;
+
+      if (ys[i] > maxY) { maxY = ys[i]; maxIdx = i; }
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const mat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.92 });
+    group.add(new THREE.Line(geo, mat));
+
+    if (row % 3 === 0) {
+      sparkPositions.push(positions[maxIdx * 3], positions[maxIdx * 3 + 1] + 0.02, positions[maxIdx * 3 + 2]);
+    }
+  }
+
+  if (sparkPositions.length) {
+    const sparkGeo = new THREE.BufferGeometry();
+    sparkGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(sparkPositions), 3));
+    const sparkMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.045, transparent: true, opacity: 0.9 });
+    group.add(new THREE.Points(sparkGeo, sparkMat));
+  }
+
+  group.rotation.x = -0.12;
+  scene.add(group);
+
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const baseRotY = group.rotation.y;
+
+  function resize() {
+    const w = container.clientWidth, h = container.clientHeight;
+    if (!w || !h) return;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  let t0 = performance.now();
+  function animate() {
+    if (!reduceMotion) {
+      const elapsed = (performance.now() - t0) / 1000;
+      group.rotation.y = baseRotY + Math.sin(elapsed * 0.15) * 0.18;
+    }
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
