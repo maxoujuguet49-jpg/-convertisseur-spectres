@@ -179,7 +179,7 @@ function escapeHtml(s) {
 /* =========================================================
    Sample file (demo)
    ========================================================= */
-const SAMPLE_JCAMP = `##TITLE=Polymer film - demo
+const SAMPLE_JCAMP = `##TITLE=Polymer film - lot A (reference)
 ##JCAMP-DX=5.01
 ##DATA TYPE=INFRARED SPECTRUM
 ##ORIGIN=Prototype Lab
@@ -189,21 +189,28 @@ const SAMPLE_JCAMP = `##TITLE=Polymer film - demo
 ##XFACTOR=1
 ##YFACTOR=1
 ##FIRSTX=4000
-##LASTX=3400
-##NPOINTS=60
+##LASTX=700
+##NPOINTS=120
 ##XYDATA=(X++(Y..Y))
-4000 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
-3918.64 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
-3837.29 0.95 0.95 0.95 0.95 0.948 0.945 0.936 0.914
-3755.93 0.872 0.801 0.701 0.583 0.474 0.408 0.408 0.472
-3674.58 0.578 0.692 0.784 0.842 0.865 0.858 0.831 0.79
-3593.22 0.741 0.691 0.647 0.615 0.601 0.606 0.629 0.668
-3511.86 0.716 0.767 0.815 0.855 0.888 0.911 0.927 0.937
-3430.51 0.943 0.947 0.948 0.949
+4000 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.949
+3778.15 0.949 0.948 0.945 0.941 0.934 0.924 0.908 0.885
+3556.3 0.856 0.819 0.777 0.731 0.686 0.646 0.617 0.602
+3334.45 0.603 0.62 0.65 0.691 0.736 0.782 0.824 0.86
+3112.61 0.889 0.91 0.925 0.933 0.918 0.83 0.684 0.668
+2890.76 0.809 0.917 0.946 0.95 0.95 0.95 0.95 0.95
+2668.91 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+2447.06 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+2225.21 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+2003.36 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+1781.51 0.935 0.789 0.452 0.512 0.84 0.942 0.95 0.95
+1559.66 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+1337.82 0.95 0.95 0.949 0.942 0.9 0.788 0.665 0.68
+1115.97 0.812 0.912 0.944 0.95 0.95 0.95 0.95 0.95
+894.12 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
 ##END=
 `;
 
-const SAMPLE_JCAMP_B = `##TITLE=Polymer film - lot B
+const SAMPLE_JCAMP_B = `##TITLE=Polymer film - lot B (variante)
 ##JCAMP-DX=5.01
 ##DATA TYPE=INFRARED SPECTRUM
 ##ORIGIN=Prototype Lab
@@ -213,17 +220,24 @@ const SAMPLE_JCAMP_B = `##TITLE=Polymer film - lot B
 ##XFACTOR=1
 ##YFACTOR=1
 ##FIRSTX=4000
-##LASTX=3400
-##NPOINTS=60
+##LASTX=700
+##NPOINTS=120
 ##XYDATA=(X++(Y..Y))
 4000 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
-3918.64 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
-3837.29 0.95 0.95 0.949 0.945 0.937 0.918 0.881 0.818
-3755.93 0.727 0.62 0.52 0.459 0.457 0.515 0.612 0.719
-3674.58 0.81 0.872 0.906 0.917 0.911 0.891 0.861 0.819
-3593.22 0.768 0.711 0.654 0.603 0.567 0.551 0.557 0.584
-3511.86 0.629 0.684 0.742 0.796 0.843 0.879 0.906 0.924
-3430.51 0.936 0.943 0.946 0.948
+3778.15 0.949 0.948 0.947 0.944 0.939 0.932 0.922 0.907
+3556.3 0.886 0.86 0.829 0.793 0.756 0.72 0.688 0.664
+3334.45 0.652 0.651 0.664 0.687 0.718 0.754 0.792 0.827
+3112.61 0.859 0.885 0.906 0.92 0.917 0.853 0.72 0.672
+2890.76 0.791 0.907 0.944 0.949 0.95 0.95 0.95 0.95
+2668.91 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+2447.06 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+2225.21 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+2003.36 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+1781.51 0.943 0.873 0.656 0.562 0.774 0.922 0.949 0.95
+1559.66 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+1337.82 0.95 0.95 0.949 0.942 0.904 0.791 0.617 0.53
+1115.97 0.632 0.805 0.91 0.943 0.949 0.95 0.95 0.95
+894.12 0.95 0.95 0.95 0.95 0.95 0.95 0.95 0.95
 ##END=
 `;
 
@@ -463,6 +477,26 @@ const ACCENT_HEX = {
   'var(--danger)': 0xEC8478, 'var(--slate)': 0x83AEE0, 'var(--plum)': 0xD19BC7
 };
 
+function makeTextSprite(text, color) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const fontSize = 44;
+  ctx.font = fontSize + 'px "IBM Plex Mono", monospace';
+  const textWidth = ctx.measureText(text).width;
+  canvas.width = textWidth + 24;
+  canvas.height = fontSize + 20;
+  ctx.font = fontSize + 'px "IBM Plex Mono", monospace';
+  ctx.fillStyle = color;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 12, canvas.height / 2);
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(material);
+  const scaleFactor = 0.011;
+  sprite.scale.set(canvas.width * scaleFactor, canvas.height * scaleFactor, 1);
+  return sprite;
+}
+
 function render3DFromItems(containerId, items) {
   const container = document.getElementById(containerId);
   if (!container || typeof THREE === 'undefined') return;
@@ -483,8 +517,25 @@ function render3DFromItems(containerId, items) {
   const xMin = Math.min(...allXs), xMax = Math.max(...allXs);
   const yMin = Math.min(...allYs), yMax = Math.max(...allYs);
   const xSpan = (xMax - xMin) || 1, ySpan = (yMax - yMin) || 1;
+  const zSpan = (items.length - 1) * depthStep;
 
   const group = new THREE.Group();
+
+  // functional group reference planes, drawn first so traces render in front
+  getRelevantGroups(xMin, xMax).forEach(g => {
+    const gx = ((g.center - xMin) / xSpan - 0.5) * spread;
+    const planeGeo = new THREE.PlaneGeometry(0.015, heightScale * 1.15);
+    const planeMat = new THREE.MeshBasicMaterial({ color: g.color, transparent: true, opacity: 0.16, side: THREE.DoubleSide });
+    for (let zz = 0; zz >= -zSpan; zz -= depthStep) {
+      const seg = new THREE.Mesh(planeGeo, planeMat);
+      seg.position.set(gx, heightScale * 0.5, zz);
+      group.add(seg);
+    }
+    const label = makeTextSprite(g.label, g.color);
+    label.position.set(gx, heightScale * 1.18, 0);
+    group.add(label);
+  });
+
   items.forEach((it, row) => {
     const n = it.xs.length;
     const positions = new Float32Array(n * 3);
@@ -503,7 +554,29 @@ function render3DFromItems(containerId, items) {
     const mat = new THREE.LineBasicMaterial({ vertexColors: true, linewidth: 2 });
     group.add(new THREE.Line(geo, mat));
   });
-  group.position.z = (items.length - 1) * depthStep / 2;
+
+  // axes
+  const axisMat = new THREE.LineBasicMaterial({ color: 0x9FB2AF, transparent: true, opacity: 0.6 });
+  function addAxisLine(from, to) {
+    const geo = new THREE.BufferGeometry().setFromPoints([from, to]);
+    group.add(new THREE.Line(geo, axisMat));
+  }
+  addAxisLine(new THREE.Vector3(-spread / 2, 0, 0), new THREE.Vector3(spread / 2, 0, 0));
+  addAxisLine(new THREE.Vector3(-spread / 2, 0, 0), new THREE.Vector3(-spread / 2, heightScale, 0));
+  addAxisLine(new THREE.Vector3(-spread / 2, 0, 0), new THREE.Vector3(-spread / 2, 0, -zSpan));
+
+  const xStartLabel = makeTextSprite(Math.round(xMin) + '', '#9FB2AF');
+  xStartLabel.position.set(-spread / 2, -0.14, 0); group.add(xStartLabel);
+  const xEndLabel = makeTextSprite(Math.round(xMax) + '', '#9FB2AF');
+  xEndLabel.position.set(spread / 2, -0.14, 0); group.add(xEndLabel);
+  const xAxisTitle = makeTextSprite("nombre d'onde (cm⁻¹)", '#9FB2AF');
+  xAxisTitle.position.set(0, -0.3, 0); group.add(xAxisTitle);
+  const yAxisTitle = makeTextSprite('intensité', '#9FB2AF');
+  yAxisTitle.position.set(-spread / 2 - 0.55, heightScale, 0); group.add(yAxisTitle);
+  const zAxisTitle = makeTextSprite('échantillons', '#9FB2AF');
+  zAxisTitle.position.set(-spread / 2, -0.14, -zSpan); group.add(zAxisTitle);
+
+  group.position.z = zSpan / 2;
   group.rotation.x = -0.15;
   scene.add(group);
 
@@ -528,7 +601,13 @@ function render3DFromItems(containerId, items) {
     container._rafId = requestAnimationFrame(animate);
   }
   animate();
-  container._stopAnim = () => { stopped = true; if (container._rafId) cancelAnimationFrame(container._rafId); };
+  container._stopAnim = () => {
+    stopped = true;
+    if (container._rafId) cancelAnimationFrame(container._rafId);
+    window.removeEventListener('resize', resize);
+    renderer.dispose();
+    try { renderer.forceContextLoss(); } catch (e) { /* not fatal if unsupported */ }
+  };
 }
 
 /* =========================================================
@@ -592,4 +671,31 @@ function makeGaussianSpectrum(xMin, xMax, nPoints, peaks, baseline) {
     xs.push(x); ys.push(Math.max(0.02, y));
   }
   return { xs, ys };
+}
+
+/* =========================================================
+   Functional group reference (shared across pages)
+   ========================================================= */
+const FUNCTIONAL_GROUPS = [
+  { label: 'O–H (alcool)', min: 3200, max: 3550, color: '#83AEE0' },
+  { label: 'O–H (acide)', min: 2500, max: 3300, color: '#5FA8D6' },
+  { label: 'N–H', min: 3300, max: 3500, color: '#8FD6C0' },
+  { label: 'C–H', min: 2850, max: 2970, color: '#57C9AC' },
+  { label: 'C≡N', min: 2210, max: 2260, color: '#A9D66B' },
+  { label: 'C=O', min: 1650, max: 1750, color: '#E8B85F' },
+  { label: 'C=C (alcène)', min: 1620, max: 1680, color: '#EFA15C' },
+  { label: 'C=C (aromatique)', min: 1450, max: 1600, color: '#EC8478' },
+  { label: 'C–O', min: 1000, max: 1300, color: '#D19BC7' },
+  { label: 'C–N', min: 1020, max: 1250, color: '#B98FE0' },
+];
+
+function getRelevantGroups(xMin, xMax) {
+  const lo = Math.min(xMin, xMax), hi = Math.max(xMin, xMax);
+  return FUNCTIONAL_GROUPS
+    .filter(g => g.min <= hi && g.max >= lo)
+    .map(g => {
+      const mid = (g.min + g.max) / 2;
+      const center = Math.max(lo, Math.min(hi, mid));
+      return Object.assign({}, g, { center });
+    });
 }

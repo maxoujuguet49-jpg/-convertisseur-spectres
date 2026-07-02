@@ -188,16 +188,16 @@
   .explainer-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-top:8px;}
   @media (max-width:760px){ .explainer-grid{grid-template-columns:1fr;} }
 
-  /* ---- hero ambient background ---- */
-  header.hero{position:relative;overflow:hidden;}
-  .hero-bg{position:absolute;inset:0;z-index:0;opacity:.6;}
-  .hero-bg #waterfallCanvas{width:100%;height:100%;}
-  .hero-bg::after{
+  /* ---- site-wide ambient background ---- */
+  .site-bg{position:fixed;inset:0;z-index:0;opacity:.42;pointer-events:none;}
+  .site-bg #waterfallCanvas{width:100%;height:100%;}
+  .site-bg::after{
     content:"";position:absolute;inset:0;
     background:
-      linear-gradient(100deg, var(--bg-a) 0%, rgba(13,24,38,.55) 38%, rgba(13,24,38,.25) 70%, rgba(13,24,38,.55) 100%),
-      linear-gradient(180deg, rgba(13,24,38,.15) 0%, var(--bg-a) 92%);
+      radial-gradient(ellipse at 30% 15%, rgba(13,24,38,.15), rgba(13,24,38,.72) 62%),
+      linear-gradient(180deg, rgba(13,24,38,.3) 0%, rgba(13,24,38,.55) 100%);
   }
+  nav.topbar, .wrap{position:relative;z-index:1;}
   .hero-content{position:relative;z-index:1;}
 
   /* ---- annotated example traces ---- */

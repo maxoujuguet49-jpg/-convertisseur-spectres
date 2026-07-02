@@ -189,7 +189,7 @@ function renderComparator() {
   compareEmptyMsg.style.display = 'none';
 
   const vb = compareChart.viewBox.baseVal;
-  const w = vb.width || 860, h = vb.height || 320, pad = 30;
+  const w = vb.width || 860, h = vb.height || 320, pad = 34;
 
   const axisX = document.createElementNS(ns, 'line');
   axisX.setAttribute('x1', pad); axisX.setAttribute('x2', w - pad);
@@ -203,6 +203,36 @@ function renderComparator() {
   axisY.setAttribute('class', 'axis');
   compareChart.appendChild(axisY);
 
+  const allXs = compareItems.flatMap(it => it.xs);
+  const allYs = compareItems.flatMap(it => it.ys);
+  const xMin = Math.min(...allXs), xMax = Math.max(...allXs);
+  const yMin = Math.min(...allYs), yMax = Math.max(...allYs);
+  const innerW = w - pad * 2, innerH = h - pad * 2;
+  const xSpan = (xMax - xMin) || 1;
+  function xToPx(x) { return pad + ((x - xMin) / xSpan) * innerW; }
+
+  // functional group reference bands, drawn behind the traces
+  const relevantGroups = getRelevantGroups(xMin, xMax);
+  relevantGroups.forEach(g => {
+    const gx = xToPx(g.center);
+    const line = document.createElementNS(ns, 'line');
+    line.setAttribute('x1', gx); line.setAttribute('x2', gx);
+    line.setAttribute('y1', pad); line.setAttribute('y2', h - pad);
+    line.setAttribute('stroke', g.color);
+    line.setAttribute('stroke-width', '1');
+    line.setAttribute('stroke-dasharray', '3 3');
+    line.setAttribute('opacity', '0.55');
+    compareChart.appendChild(line);
+
+    const label = document.createElementNS(ns, 'text');
+    label.setAttribute('x', gx); label.setAttribute('y', pad - 6);
+    label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('class', 'axis-label');
+    label.setAttribute('fill', g.color);
+    label.textContent = g.label;
+    compareChart.appendChild(label);
+  });
+
   const paths = buildMultiTracePaths(compareItems, w, h, pad);
   compareItems.forEach((it, i) => {
     const path = document.createElementNS(ns, 'path');
@@ -215,8 +245,6 @@ function renderComparator() {
     compareChart.appendChild(path);
   });
 
-  const allXs = compareItems.flatMap(it => it.xs);
-  const xMin = Math.min(...allXs), xMax = Math.max(...allXs);
   const xLabelStart = document.createElementNS(ns, 'text');
   xLabelStart.setAttribute('x', pad); xLabelStart.setAttribute('y', h - pad + 16);
   xLabelStart.setAttribute('class', 'axis-label');
@@ -229,6 +257,33 @@ function renderComparator() {
   xLabelEnd.setAttribute('text-anchor', 'end');
   xLabelEnd.textContent = Math.round(xMax);
   compareChart.appendChild(xLabelEnd);
+
+  const xTitle = document.createElementNS(ns, 'text');
+  xTitle.setAttribute('x', (pad + w - pad) / 2); xTitle.setAttribute('y', h - 4);
+  xTitle.setAttribute('text-anchor', 'middle');
+  xTitle.setAttribute('class', 'axis-label');
+  xTitle.textContent = "Nombre d'onde (cm⁻¹)";
+  compareChart.appendChild(xTitle);
+
+  const yLabelTop = document.createElementNS(ns, 'text');
+  yLabelTop.setAttribute('x', pad - 6); yLabelTop.setAttribute('y', pad + 4);
+  yLabelTop.setAttribute('text-anchor', 'end');
+  yLabelTop.setAttribute('class', 'axis-label');
+  yLabelTop.textContent = yMax.toFixed(2);
+  compareChart.appendChild(yLabelTop);
+
+  const yLabelBottom = document.createElementNS(ns, 'text');
+  yLabelBottom.setAttribute('x', pad - 6); yLabelBottom.setAttribute('y', h - pad);
+  yLabelBottom.setAttribute('text-anchor', 'end');
+  yLabelBottom.setAttribute('class', 'axis-label');
+  yLabelBottom.textContent = yMin.toFixed(2);
+  compareChart.appendChild(yLabelBottom);
+
+  const yTitle = document.createElementNS(ns, 'text');
+  yTitle.setAttribute('x', 10); yTitle.setAttribute('y', pad - 14);
+  yTitle.setAttribute('class', 'axis-label');
+  yTitle.textContent = 'Intensité';
+  compareChart.appendChild(yTitle);
 
   compareItems.forEach(it => {
     const chip = document.createElement('div');
@@ -260,7 +315,12 @@ viewToggle.addEventListener('click', (e) => {
   viewToggle.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
   comparePanel.style.display = currentView === '2d' ? 'block' : 'none';
   compare3DPanel.style.display = currentView === '3d' ? 'block' : 'none';
-  if (currentView === '3d') refresh3DView();
+  if (currentView === '3d') {
+    refresh3DView();
+  } else {
+    const c = document.getElementById('compare3D');
+    if (c._stopAnim) c._stopAnim();
+  }
 });
 
 function refresh3DView() {
