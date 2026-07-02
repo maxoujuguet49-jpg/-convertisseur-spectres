@@ -188,6 +188,40 @@
   .explainer-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-top:8px;}
   @media (max-width:760px){ .explainer-grid{grid-template-columns:1fr;} }
 
+  /* ---- hero ambient background ---- */
+  header.hero{position:relative;overflow:hidden;}
+  .hero-bg{position:absolute;inset:0;z-index:0;opacity:.6;}
+  .hero-bg #waterfallCanvas{width:100%;height:100%;}
+  .hero-bg::after{
+    content:"";position:absolute;inset:0;
+    background:
+      linear-gradient(100deg, var(--bg-a) 0%, rgba(13,24,38,.55) 38%, rgba(13,24,38,.25) 70%, rgba(13,24,38,.55) 100%),
+      linear-gradient(180deg, rgba(13,24,38,.15) 0%, var(--bg-a) 92%);
+  }
+  .hero-content{position:relative;z-index:1;}
+
+  /* ---- annotated example traces ---- */
+  .annotation-line{stroke:var(--ink-soft);stroke-width:1;stroke-dasharray:2 2;}
+  .annotation-dot{fill:var(--brass);}
+  .annotation-label{font-family:var(--font-mono);font-size:10px;fill:var(--ink);}
+  .example-card{border:1px solid var(--grid);background:var(--surface);border-radius:var(--radius);padding:16px;backdrop-filter:blur(12px) saturate(150%);}
+  .example-card h3{font-family:var(--font-display);font-size:15.5px;font-weight:600;margin:0 0 8px;}
+  .example-card svg{width:100%;height:auto;display:block;margin-bottom:8px;}
+  .example-card p{font-size:12.5px;color:var(--ink-soft);margin:0;}
+  .examples-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:8px;}
+
+  /* ---- 2D/3D view toggle ---- */
+  .view-toggle{display:inline-flex;border:1px solid var(--grid);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+  .view-toggle button{
+    border:none;border-radius:0;background:transparent;color:var(--ink-soft);
+    padding:8px 16px;font-size:13px;
+  }
+  .view-toggle button.active{background:var(--spectral);color:#0D1826;}
+  .view-toggle button:hover{filter:none;}
+  #compare3D{width:100%;aspect-ratio:16/9;border-radius:2px;overflow:hidden;}
+  #compare3D canvas{display:block;width:100% !important;height:100% !important;}
+  .compare-3d-empty{font-family:var(--font-mono);font-size:13px;color:var(--ink-soft);text-align:center;padding:36px 12px;}
+
   .trace-panel{
     border:1px solid var(--grid);
     background:var(--surface);

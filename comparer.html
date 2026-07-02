@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
   .page-header{padding:36px 0 8px;}
 </style>
@@ -61,10 +62,20 @@
     </div>
     <p id="compareStatus" role="status" aria-live="polite"></p>
 
-    <div class="compare-panel" id="comparePanel" style="margin-top:20px;">
+    <div class="view-toggle" id="viewToggle">
+      <button type="button" data-view="2d" class="active">Vue 2D</button>
+      <button type="button" data-view="3d">Vue 3D</button>
+    </div>
+
+    <div class="compare-panel" id="comparePanel" style="margin-top:0;">
       <svg class="compare-chart" id="compareChart" viewBox="0 0 860 320" preserveAspectRatio="none" role="img" aria-label="Superposition des spectres chargés"></svg>
       <div class="compare-legend" id="compareLegend"></div>
       <p class="compare-empty" id="compareEmptyMsg">Aucun spectre chargé pour l'instant.</p>
+    </div>
+
+    <div class="compare-panel" id="compare3DPanel" style="margin-top:0;display:none;">
+      <div id="compare3D"></div>
+      <p class="compare-3d-empty" id="compare3DEmptyMsg">Aucun spectre chargé pour l'instant.</p>
     </div>
   </section>
 
@@ -232,6 +243,42 @@ compareSampleBtn.addEventListener('click', () => {
   addCompareItem('lot_A_reference.jdx', SAMPLE_JCAMP);
   addCompareItem('lot_B_variante.jdx', SAMPLE_JCAMP_B);
 });
+
+/* =========================================================
+   2D / 3D view toggle
+   ========================================================= */
+let currentView = '2d';
+const comparePanel = document.getElementById('comparePanel');
+const compare3DPanel = document.getElementById('compare3DPanel');
+const compare3DEmptyMsg = document.getElementById('compare3DEmptyMsg');
+const viewToggle = document.getElementById('viewToggle');
+
+viewToggle.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-view]');
+  if (!btn) return;
+  currentView = btn.dataset.view;
+  viewToggle.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+  comparePanel.style.display = currentView === '2d' ? 'block' : 'none';
+  compare3DPanel.style.display = currentView === '3d' ? 'block' : 'none';
+  if (currentView === '3d') refresh3DView();
+});
+
+function refresh3DView() {
+  if (currentView !== '3d') return;
+  compare3DEmptyMsg.style.display = compareItems.length ? 'none' : 'block';
+  if (compareItems.length) render3DFromItems('compare3D', compareItems);
+  else {
+    const c = document.getElementById('compare3D');
+    if (c._stopAnim) c._stopAnim();
+    c.innerHTML = '';
+  }
+}
+
+const _origRenderComparator = renderComparator;
+renderComparator = function() {
+  _origRenderComparator();
+  refresh3DView();
+};
 </script>
 
 </body>

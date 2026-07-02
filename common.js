@@ -454,3 +454,142 @@ function initWaterfallScene(containerId) {
   }
   animate();
 }
+
+/* =========================================================
+   3D view driven by real comparator data (optional view)
+   ========================================================= */
+const ACCENT_HEX = {
+  'var(--verdigris)': 0x57C9AC, 'var(--brass)': 0xE8B85F,
+  'var(--danger)': 0xEC8478, 'var(--slate)': 0x83AEE0, 'var(--plum)': 0xD19BC7
+};
+
+function render3DFromItems(containerId, items) {
+  const container = document.getElementById(containerId);
+  if (!container || typeof THREE === 'undefined') return;
+  if (container._stopAnim) { container._stopAnim(); }
+  container.innerHTML = '';
+  if (!items || !items.length) return;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight || 1.7, 0.1, 100);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+
+  const spread = 7, depthStep = 0.7, heightScale = 1.7;
+  const allXs = items.flatMap(it => it.xs), allYs = items.flatMap(it => it.ys);
+  const xMin = Math.min(...allXs), xMax = Math.max(...allXs);
+  const yMin = Math.min(...allYs), yMax = Math.max(...allYs);
+  const xSpan = (xMax - xMin) || 1, ySpan = (yMax - yMin) || 1;
+
+  const group = new THREE.Group();
+  items.forEach((it, row) => {
+    const n = it.xs.length;
+    const positions = new Float32Array(n * 3);
+    const z = -row * depthStep;
+    const colorObj = new THREE.Color(ACCENT_HEX[it.color] || 0x57C9AC);
+    const colors = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const px = ((it.xs[i] - xMin) / xSpan - 0.5) * spread;
+      const py = ((it.ys[i] - yMin) / ySpan) * heightScale;
+      positions[i * 3] = px; positions[i * 3 + 1] = py; positions[i * 3 + 2] = z;
+      colors[i * 3] = colorObj.r; colors[i * 3 + 1] = colorObj.g; colors[i * 3 + 2] = colorObj.b;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const mat = new THREE.LineBasicMaterial({ vertexColors: true, linewidth: 2 });
+    group.add(new THREE.Line(geo, mat));
+  });
+  group.position.z = (items.length - 1) * depthStep / 2;
+  group.rotation.x = -0.15;
+  scene.add(group);
+
+  const dist = 4.5 + items.length * 0.35;
+  camera.position.set(0, 3, dist);
+  camera.lookAt(0, 0.6, 0);
+
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function resize() {
+    const w = container.clientWidth, h = container.clientHeight;
+    if (!w || !h) return;
+    camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  let stopped = false;
+  function animate() {
+    if (stopped) return;
+    if (!reduceMotion) group.rotation.y += 0.004;
+    renderer.render(scene, camera);
+    container._rafId = requestAnimationFrame(animate);
+  }
+  animate();
+  container._stopAnim = () => { stopped = true; if (container._rafId) cancelAnimationFrame(container._rafId); };
+}
+
+/* =========================================================
+   Annotated example traces (functional group callouts)
+   ========================================================= */
+function renderAnnotatedTrace(svgEl, xs, ys, annotations) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const vb = svgEl.viewBox.baseVal;
+  const w = vb.width || 500, h = vb.height || 180;
+  const padTop = 34, padSide = 12, padBottom = 20;
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const xSpan = (xMax - xMin) || 1, ySpan = (yMax - yMin) || 1;
+  const innerW = w - padSide * 2, innerH = h - padTop - padBottom;
+
+  function toPx(x) { return padSide + ((x - xMin) / xSpan) * innerW; }
+  function toPy(y) { return padTop + innerH - ((y - yMin) / ySpan) * innerH; }
+
+  svgEl.innerHTML = '';
+  let d = '';
+  xs.forEach((x, i) => { d += (i === 0 ? 'M' : 'L') + toPx(x).toFixed(2) + ',' + toPy(ys[i]).toFixed(2) + ' '; });
+  const path = document.createElementNS(ns, 'path');
+  path.setAttribute('d', d.trim());
+  path.setAttribute('class', 'line');
+  svgEl.appendChild(path);
+
+  (annotations || []).forEach(a => {
+    let closestIdx = 0, closestDist = Infinity;
+    xs.forEach((x, i) => { const dist = Math.abs(x - a.x); if (dist < closestDist) { closestDist = dist; closestIdx = i; } });
+    const px = toPx(xs[closestIdx]), py = toPy(ys[closestIdx]);
+
+    const line = document.createElementNS(ns, 'line');
+    line.setAttribute('x1', px); line.setAttribute('x2', px);
+    line.setAttribute('y1', py - 4); line.setAttribute('y2', 12);
+    line.setAttribute('class', 'annotation-line');
+    svgEl.appendChild(line);
+
+    const dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('cx', px); dot.setAttribute('cy', py); dot.setAttribute('r', 2.6);
+    dot.setAttribute('class', 'annotation-dot');
+    svgEl.appendChild(dot);
+
+    const text = document.createElementNS(ns, 'text');
+    text.setAttribute('x', px); text.setAttribute('y', 9);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('class', 'annotation-label');
+    text.textContent = a.label;
+    svgEl.appendChild(text);
+  });
+}
+
+/* =========================================================
+   Synthetic spectrum generator (for annotated examples)
+   ========================================================= */
+function makeGaussianSpectrum(xMin, xMax, nPoints, peaks, baseline) {
+  const xs = [], ys = [];
+  for (let i = 0; i < nPoints; i++) {
+    const x = xMin + (xMax - xMin) * (i / (nPoints - 1));
+    let y = baseline !== undefined ? baseline : 0.95;
+    for (const p of peaks) y -= p.depth * Math.exp(-Math.pow((x - p.center) / p.width, 2));
+    xs.push(x); ys.push(Math.max(0.02, y));
+  }
+  return { xs, ys };
+}
