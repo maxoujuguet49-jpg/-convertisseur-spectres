@@ -480,19 +480,19 @@ const ACCENT_HEX = {
 function makeTextSprite(text, color) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  const fontSize = 44;
+  const fontSize = 40;
   ctx.font = fontSize + 'px "IBM Plex Mono", monospace';
   const textWidth = ctx.measureText(text).width;
-  canvas.width = textWidth + 24;
-  canvas.height = fontSize + 20;
+  canvas.width = textWidth + 20;
+  canvas.height = fontSize + 16;
   ctx.font = fontSize + 'px "IBM Plex Mono", monospace';
   ctx.fillStyle = color;
   ctx.textBaseline = 'middle';
-  ctx.fillText(text, 12, canvas.height / 2);
+  ctx.fillText(text, 10, canvas.height / 2);
   const texture = new THREE.CanvasTexture(canvas);
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
   const sprite = new THREE.Sprite(material);
-  const scaleFactor = 0.011;
+  const scaleFactor = 0.0045;
   sprite.scale.set(canvas.width * scaleFactor, canvas.height * scaleFactor, 1);
   return sprite;
 }
@@ -525,7 +525,7 @@ function render3DFromItems(containerId, items) {
   const relevantGroups3D = getRelevantGroups(xMin, xMax).map(g =>
     Object.assign({}, g, { gx: ((g.center - xMin) / xSpan - 0.5) * spread })
   );
-  const laidOutGroups3D = layoutAnnotationLanes(relevantGroups3D, g => g.gx, () => 1.1, 0.15);
+  const laidOutGroups3D = layoutAnnotationLanes(relevantGroups3D, g => g.gx, g => g.label.length * 0.11 + 0.1, 0.15);
   laidOutGroups3D.forEach(g => {
     const gx = g.gx;
     const planeGeo = new THREE.PlaneGeometry(0.015, heightScale * 1.15);
