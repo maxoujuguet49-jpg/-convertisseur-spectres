@@ -153,6 +153,7 @@ function renderFileCard(name, meta, xs, ys) {
   const card = document.createElement('div');
   card.className = 'file-card';
   const svgId = 'trace-' + Math.random().toString(36).slice(2, 9);
+  const peaks = detectAndMatchPeaks(xs, ys, meta['YUNITS']);
   card.innerHTML = `
     <div class="file-card-head">
       <div>
@@ -161,6 +162,8 @@ function renderFileCard(name, meta, xs, ys) {
       </div>
     </div>
     <svg class="mini-trace" id="${svgId}" viewBox="0 0 800 140" preserveAspectRatio="none" role="img" aria-label="Aperçu du spectre ${escapeHtml(name)}"></svg>
+    <div class="file-meta-line" style="margin:2px 0 6px;font-weight:500;">${t('peaks.title')}</div>
+    ${peaksListHTML(peaks)}
     <table class="meta-table">
       ${metaRow(t('meta.title'), meta['TITLE'])}
       ${metaRow(t('meta.type'), meta['DATA TYPE'])}
@@ -176,6 +179,7 @@ function renderFileCard(name, meta, xs, ys) {
   `;
   resultsEl.appendChild(card);
   renderTrace(document.getElementById(svgId), xs, ys, { padding: 10 });
+  addPeakMarkers(document.getElementById(svgId), xs, ys, peaks);
 
   const xLabel = meta['XUNITS'] || 'x';
   const yLabel = meta['YUNITS'] || 'y';

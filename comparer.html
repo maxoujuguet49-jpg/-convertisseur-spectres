@@ -82,6 +82,7 @@
     <div class="compare-panel" id="compare3DPanel" style="margin-top:0;display:none;">
       <div id="compare3D"></div>
       <p class="compare-3d-empty" id="compare3DEmptyMsg" data-i18n="compare.empty">Aucun spectre chargé pour l'instant.</p>
+      <p class="drag-hint" data-i18n="compare.dragHint">🖱 Glissez pour tourner · molette pour zoomer</p>
     </div>
   </section>
 
@@ -150,7 +151,8 @@ function addCompareItem(name, text) {
   try {
     const { meta, xs, ys } = parseJcamp(text);
     const color = TRACE_COLORS[compareIdSeq % TRACE_COLORS.length];
-    compareItems.push({ id: compareIdSeq++, name, meta, xs, ys, color });
+    const peaks = detectAndMatchPeaks(xs, ys, meta['YUNITS']);
+    compareItems.push({ id: compareIdSeq++, name, meta, xs, ys, color, peaks });
     renderComparator();
   } catch (err) {
     compareStatus.textContent = t('status.decodeFailOn') + ' ' + name + ' — ' + err.message;
@@ -256,6 +258,20 @@ function renderComparator() {
     path.setAttribute('stroke-linejoin', 'round');
     path.setAttribute('stroke-linecap', 'round');
     compareChart.appendChild(path);
+  });
+
+  // peak markers, one small dot per detected peak, colored per spectrum
+  const ySpanAll = (yMax - yMin) || 1;
+  compareItems.forEach(it => {
+    (it.peaks || []).forEach(p => {
+      const px = xToPx(p.x);
+      const py = pad + innerH - ((p.y - yMin) / ySpanAll) * innerH;
+      const dot = document.createElementNS(ns, 'circle');
+      dot.setAttribute('cx', px); dot.setAttribute('cy', py); dot.setAttribute('r', 2.8);
+      dot.setAttribute('fill', it.color);
+      dot.setAttribute('stroke', '#0D1826'); dot.setAttribute('stroke-width', '0.8');
+      compareChart.appendChild(dot);
+    });
   });
 
   const xLabelStart = document.createElementNS(ns, 'text');

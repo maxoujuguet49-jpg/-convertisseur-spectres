@@ -584,18 +584,56 @@ function render3DFromItems(containerId, items) {
   group.rotation.x = -0.15;
   scene.add(group);
 
-  const dist = 4.5 + items.length * 0.35;
+  let dist = 4.5 + items.length * 0.35;
+  const minDist = 2.5, maxDist = dist * 2.2;
   camera.position.set(2.2, 2.6, dist);
-  camera.lookAt(0, 0.6, -zSpan / 2);
+  const lookTarget = new THREE.Vector3(0, 0.6, -zSpan / 2);
+  camera.lookAt(lookTarget);
+
+  function doRender() { renderer.render(scene, camera); }
 
   function resize() {
     const w = container.clientWidth, h = container.clientHeight;
     if (!w || !h) return;
     camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
-    renderer.render(scene, camera);
+    doRender();
   }
   window.addEventListener('resize', resize);
   resize();
+
+  /* --- mouse / touch drag to rotate, wheel to zoom --- */
+  const canvas = renderer.domElement;
+  canvas.style.cursor = 'grab';
+  canvas.style.touchAction = 'none';
+  let dragging = false, lastX = 0, lastY = 0;
+
+  function startDrag(x, y) { dragging = true; lastX = x; lastY = y; canvas.style.cursor = 'grabbing'; }
+  function moveDrag(x, y) {
+    if (!dragging) return;
+    const dx = x - lastX, dy = y - lastY;
+    lastX = x; lastY = y;
+    group.rotation.y += dx * 0.006;
+    group.rotation.x = Math.max(-1.3, Math.min(0.7, group.rotation.x + dy * 0.006));
+    doRender();
+  }
+  function endDrag() { dragging = false; canvas.style.cursor = 'grab'; }
+
+  function updateCameraDistance() {
+    const dir = camera.position.clone().sub(lookTarget).normalize();
+    camera.position.copy(lookTarget).add(dir.multiplyScalar(dist));
+    doRender();
+  }
+
+  canvas.addEventListener('pointerdown', (e) => { startDrag(e.clientX, e.clientY); canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointermove', (e) => moveDrag(e.clientX, e.clientY));
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('pointerleave', endDrag);
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    dist = Math.max(minDist, Math.min(maxDist, dist + e.deltaY * 0.003));
+    updateCameraDistance();
+  }, { passive: false });
 
   container._stopAnim = () => {
     window.removeEventListener('resize', resize);
@@ -758,6 +796,10 @@ const TRANSLATIONS = {
     'form.newComponent': 'Nouveau composant', 'form.newProperty': 'Nouvelle propriété',
     'form.noPropsYet': 'Ajoutez une propriété pour voir un résultat.',
 
+    'peaks.title': 'Pics détectés', 'peaks.none': 'Aucun pic significatif détecté.',
+    'peaks.unidentified': 'non identifié',
+    'compare.dragHint': '🖱 Glissez pour tourner · molette pour zoomer',
+
     'lang.toggleLabel': 'Langue',
 
     'home.eyebrow': 'spectra.tools — outils de laboratoire',
@@ -840,6 +882,10 @@ const TRANSLATIONS = {
     'form.startValue': 'Starting value', 'form.base': 'Base', 'form.targetMinMax': 'Target min / max',
     'form.newComponent': 'New component', 'form.newProperty': 'New property',
     'form.noPropsYet': 'Add a property to see a result.',
+
+    'peaks.title': 'Detected peaks', 'peaks.none': 'No significant peak detected.',
+    'peaks.unidentified': 'unidentified',
+    'compare.dragHint': '🖱 Drag to rotate · scroll to zoom',
 
     'lang.toggleLabel': 'Language',
 
@@ -953,3 +999,120 @@ function initLanguageToggle() {
 }
 
 document.addEventListener('DOMContentLoaded', initLanguageToggle);
+
+/* =========================================================
+   Automatic peak detection + functional-group matching
+   ========================================================= */
+/* Topographic prominence-based peak detector.
+   mode: 'dip' looks for local minima (e.g. transmittance spectra),
+   'peak' looks for local maxima (e.g. absorbance spectra). */
+function detectPeaks(xs, ys, mode, opts) {
+  opts = opts || {};
+  const minProminenceRatio = opts.minProminenceRatio ?? 0.06; // fraction of total signal range
+  const minSeparation = opts.minSeparation ?? 20; // in x-units (cm-1)
+  const n = xs.length;
+  if (n < 5) return [];
+
+  const isDip = mode === 'dip';
+  const raw = isDip ? ys.map(y => -y) : ys.slice();
+
+  // light smoothing (5-point moving average) to reduce high-frequency noise
+  // while preserving genuine (much wider) absorption bands
+  const signal = raw.map((v, i) => {
+    let sum = 0, count = 0;
+    for (let k = -2; k <= 2; k++) {
+      const j = i + k;
+      if (j >= 0 && j < n) { sum += raw[j]; count++; }
+    }
+    return sum / count;
+  });
+
+  const sigMin = Math.min(...signal), sigMax = Math.max(...signal);
+  const range = (sigMax - sigMin) || 1;
+  const minProminence = range * minProminenceRatio;
+
+  // strict local maxima of `signal`
+  const candidates = [];
+  for (let i = 1; i < n - 1; i++) {
+    if (signal[i] > signal[i - 1] && signal[i] >= signal[i + 1]) candidates.push(i);
+  }
+
+  function prominenceAt(i) {
+    const v = signal[i];
+    let colLeft = v;
+    for (let j = i - 1; j >= 0; j--) {
+      colLeft = Math.min(colLeft, signal[j]);
+      if (signal[j] > v) break;
+    }
+    let colRight = v;
+    for (let j = i + 1; j < n; j++) {
+      colRight = Math.min(colRight, signal[j]);
+      if (signal[j] > v) break;
+    }
+    return v - Math.max(colLeft, colRight);
+  }
+
+  let scored = candidates
+    .map(i => ({ index: i, x: xs[i], y: ys[i], prominence: prominenceAt(i) }))
+    .filter(p => p.prominence >= minProminence);
+
+  // non-max suppression: keep the most prominent peak within each minSeparation window
+  scored.sort((a, b) => b.prominence - a.prominence);
+  const accepted = [];
+  for (const p of scored) {
+    if (accepted.some(a => Math.abs(a.x - p.x) < minSeparation)) continue;
+    accepted.push(p);
+  }
+  accepted.sort((a, b) => b.x - a.x); // conventional IR order: high wavenumber first
+  return accepted;
+}
+
+
+function guessPeakMode(yUnits) {
+  const u = (yUnits || '').toUpperCase();
+  if (u.includes('TRANSMITT') || u.includes('TRANSMISSION')) return 'dip';
+  if (u.includes('ABSORB')) return 'peak';
+  return 'dip'; // most common convention for IR when unspecified
+}
+
+function matchPeakToGroups(x) {
+  // several IR bands legitimately overlap (e.g. broad acid O-H vs C-H, or N-H vs O-H
+  // alcohol) — showing every plausible match is more honest than guessing a single one
+  return FUNCTIONAL_GROUPS.filter(g => x >= g.min && x <= g.max);
+}
+
+function detectAndMatchPeaks(xs, ys, yUnits, opts) {
+  const mode = guessPeakMode(yUnits);
+  const peaks = detectPeaks(xs, ys, mode, opts);
+  return peaks.map(p => Object.assign({}, p, { groups: matchPeakToGroups(p.x) }));
+}
+
+function addPeakMarkers(svgEl, xs, ys, peaks) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const vb = svgEl.viewBox.baseVal;
+  const w = vb.width || 500, h = vb.height || 180, pad = 10;
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const xSpan = (xMax - xMin) || 1, ySpan = (yMax - yMin) || 1;
+  const innerW = w - pad * 2, innerH = h - pad * 2;
+  peaks.forEach(p => {
+    const px = pad + ((p.x - xMin) / xSpan) * innerW;
+    const py = pad + innerH - ((p.y - yMin) / ySpan) * innerH;
+    const dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('cx', px); dot.setAttribute('cy', py); dot.setAttribute('r', 3);
+    dot.setAttribute('class', 'annotation-dot');
+    svgEl.appendChild(dot);
+  });
+}
+
+function peaksListHTML(peaks) {
+  if (!peaks.length) return '<p class="peaks-empty">' + t('peaks.none') + '</p>';
+  const items = peaks.map(p => {
+    const label = p.groups.length ? p.groups.map(g => g.label).join(' / ') : t('peaks.unidentified');
+    const color = p.groups.length ? p.groups[0].color : '#9FB2AF';
+    return '<li><span class="peak-dot" style="background:' + color + '"></span>' +
+           '<span class="peak-x">' + Math.round(p.x) + ' cm⁻¹</span>' +
+           '<span class="peak-label">' + escapeHtml(label) + '</span></li>';
+  }).join('');
+  return '<ul class="peaks-list">' + items + '</ul>';
+}
