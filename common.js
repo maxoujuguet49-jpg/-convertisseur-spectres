@@ -417,7 +417,7 @@ function initWaterfallScene(containerId) {
 
       const hue = rainbowHue(t);
       const color = new THREE.Color();
-      color.setHSL(hue, 0.75, 0.55);
+      color.setHSL(hue, 0.92, 0.62);
       colors[i * 3] = color.r; colors[i * 3 + 1] = color.g; colors[i * 3 + 2] = color.b;
 
       if (ys[i] > maxY) { maxY = ys[i]; maxIdx = i; }
@@ -429,7 +429,7 @@ function initWaterfallScene(containerId) {
     const mat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.92 });
     group.add(new THREE.Line(geo, mat));
 
-    if (row % 3 === 0) {
+    if (row % 2 === 0) {
       sparkPositions.push(positions[maxIdx * 3], positions[maxIdx * 3 + 1] + 0.02, positions[maxIdx * 3 + 2]);
     }
   }
@@ -437,7 +437,7 @@ function initWaterfallScene(containerId) {
   if (sparkPositions.length) {
     const sparkGeo = new THREE.BufferGeometry();
     sparkGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(sparkPositions), 3));
-    const sparkMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.045, transparent: true, opacity: 0.9 });
+    const sparkMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.06, transparent: true, opacity: 0.95 });
     group.add(new THREE.Points(sparkGeo, sparkMat));
   }
 
@@ -858,6 +858,11 @@ const TRANSLATIONS = {
     'hero2.nextDesc': 'Identification automatique des groupes fonctionnels.',
     'hero2.hotspot1': 'Identifier les groupes fonctionnels',
     'hero2.hotspot2': 'Comparer plusieurs spectres',
+    'hero2.specsTitle': 'Moteur',
+    'hero2.spec1': 'Traitement : local',
+    'hero2.spec2': 'Format : JCAMP-DX',
+    'hero2.spec3': 'Rendu : WebGL temps réel',
+    'hero2.spec4': 'Latence : instantanée',
 
     'convert.eyebrow': 'Outil 02 — conversion de spectres',
     'convert.h1': 'Vos spectres JCAMP&#8209;DX, <span class="accent">propres et lisibles</span>.',
@@ -983,6 +988,11 @@ const TRANSLATIONS = {
     'hero2.nextDesc': 'Automatic functional group identification.',
     'hero2.hotspot1': 'Identify functional groups',
     'hero2.hotspot2': 'Compare several spectra',
+    'hero2.specsTitle': 'Engine',
+    'hero2.spec1': 'Processing: local',
+    'hero2.spec2': 'Format: JCAMP-DX',
+    'hero2.spec3': 'Rendering: real-time WebGL',
+    'hero2.spec4': 'Latency: instant',
 
     'convert.eyebrow': 'Tool 02 — spectrum conversion',
     'convert.h1': 'Your JCAMP&#8209;DX spectra, <span class="accent">clean and readable</span>.',

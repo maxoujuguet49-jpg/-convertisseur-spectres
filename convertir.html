@@ -147,7 +147,7 @@ function processOne(name, text) {
 }
 
 function metaRow(k, v) {
-  return v ? '<tr><td class="k">' + k + '</td><td>' + v + '</td></tr>' : '';
+  return v ? '<tr><td class="k">' + escapeHtml(k) + '</td><td>' + escapeHtml(v) + '</td></tr>' : '';
 }
 
 function renderFileCard(name, meta, xs, ys) {
@@ -162,7 +162,7 @@ function renderFileCard(name, meta, xs, ys) {
         <div class="file-meta-line">${xs.length} ${t('meta.pointsDecoded')}</div>
       </div>
     </div>
-    <svg class="mini-trace" id="${svgId}" viewBox="0 0 800 140" preserveAspectRatio="none" role="img" aria-label="Aperçu du spectre ${escapeHtml(name)}"></svg>
+    <svg class="mini-trace trace" id="${svgId}" viewBox="0 0 800 140" preserveAspectRatio="none" role="img" aria-label="Aperçu du spectre ${escapeHtml(name)}"></svg>
     <div class="file-meta-line" style="margin:2px 0 6px;font-weight:500;">${t('peaks.title')}</div>
     ${peaksListHTML(peaks)}
     <table class="meta-table">
