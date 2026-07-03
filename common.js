@@ -849,6 +849,16 @@ const TRANSLATIONS = {
     'home.tool2Title': 'Comparateur', 'home.tool2Desc': 'Superposez plusieurs spectres sur un même graphique pour repérer les écarts.',
     'home.tool3Title': 'Calculateur de formulation', 'home.tool3Desc': 'Composants et propriétés paramétrables, résultats en direct avec curseurs.',
 
+    'hero2.kicker': 'LABORATOIRE',
+    'hero2.desc': 'Convertir, comparer et analyser vos spectres — sans compte, sans serveur, juste votre navigateur.',
+    'hero2.readmore': 'En savoir plus',
+    'hero2.captionTitle': 'Un spectre, en 3D',
+    'hero2.captionBody': 'Chaque courbe superposée représente un échantillon. La couleur suit le nombre d\'onde, du bleu au rouge.',
+    'hero2.nextLabel': 'Prochain outil',
+    'hero2.nextDesc': 'Identification automatique des groupes fonctionnels.',
+    'hero2.hotspot1': 'Identifier les groupes fonctionnels',
+    'hero2.hotspot2': 'Comparer plusieurs spectres',
+
     'convert.eyebrow': 'Outil 02 — conversion de spectres',
     'convert.h1': 'Vos spectres JCAMP&#8209;DX, <span class="accent">propres et lisibles</span>.',
     'convert.lede': 'Déposez un ou plusieurs fichiers <strong>.jdx</strong> / <strong>.dx</strong>. L\'outil décode l\'en-tête, reconstruit les points X/Y — y compris les formats compressés SQZ/DIF/DUP — et vous rend des fichiers exploitables tout de suite.',
@@ -963,6 +973,16 @@ const TRANSLATIONS = {
     'home.tool1Title': 'Converter', 'home.tool1Desc': 'JCAMP-DX files (.jdx, .dx) to CSV or JSON, one at a time or in batch.',
     'home.tool2Title': 'Comparator', 'home.tool2Desc': 'Overlay several spectra on the same chart to spot the differences.',
     'home.tool3Title': 'Formulation calculator', 'home.tool3Desc': 'Configurable components and properties, live results with sliders.',
+
+    'hero2.kicker': 'LABORATORY',
+    'hero2.desc': 'Convert, compare, and analyze your spectra — no account, no server, just your browser.',
+    'hero2.readmore': 'Learn more',
+    'hero2.captionTitle': 'A spectrum, in 3D',
+    'hero2.captionBody': 'Each overlaid curve represents a sample. Color follows wavenumber, from blue to red.',
+    'hero2.nextLabel': 'Next tool',
+    'hero2.nextDesc': 'Automatic functional group identification.',
+    'hero2.hotspot1': 'Identify functional groups',
+    'hero2.hotspot2': 'Compare several spectra',
 
     'convert.eyebrow': 'Tool 02 — spectrum conversion',
     'convert.h1': 'Your JCAMP&#8209;DX spectra, <span class="accent">clean and readable</span>.',
