@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analyser un spectre — spectra.tools</title>
+<meta name="description" content="Importez un fichier CSV, TSV ou TXT, tracez le spectre, détectez les pics et identifiez les groupes fonctionnels automatiquement. Générez un rapport exportable.">
+<meta property="og:title" content="Analyser un spectre — spectra.tools">
+<meta property="og:description" content="Analyse de spectre à partir de données brutes, avec identification automatique des groupes fonctionnels et rapport exportable.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230D1826'/%3E%3Cpath d='M2 20 L8 20 L11 9 L14 26 L18 14 L21 20 L30 20' fill='none' stroke='%2357C9AC' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<!-- Cloudflare Web Analytics : remplace TON_TOKEN_ICI par le token fourni après inscription sur dash.cloudflare.com -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "TON_TOKEN_ICI"}'></script>
+<style>
+  .page-header{padding:36px 0 8px;}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="wrap">
+    <a href="index.html" class="wordmark">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M2 20 L8 20 L11 9 L14 26 L18 14 L21 20 L30 20" fill="none" stroke="#57C9AC" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      spectra.tools
+    </a>
+    <div class="nav-links">
+      <a href="analyser.html" class="active" data-i18n="nav.analyze">Analyser</a>
+      <a href="convertir.html" data-i18n="nav.convert">Convertir</a>
+      <a href="comparer.html" data-i18n="nav.compare">Comparer</a>
+      <a href="formulation.html" data-i18n="nav.formulation">Formulation</a>
+      <a href="index.html#formats" data-i18n="nav.formats">Formats</a>
+      <a href="index.html#upcoming" data-i18n="nav.upcoming">Prochains outils</a>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Choix de la langue">
+      <button type="button" data-lang="fr" class="active">FR</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header class="page-header reveal">
+    <div class="eyebrow" data-i18n="analyze.eyebrow">Outil 01 — analyse de spectre</div>
+    <h1 style="max-width:22ch;" data-i18n-html="analyze.h1">Importez vos données, <span class="accent">identifiez les groupes</span> automatiquement.</h1>
+    <p class="lede" data-i18n="analyze.lede">Déposez un fichier CSV, TSV ou TXT contenant deux colonnes numériques (nombre d'onde, intensité). Le site trace le spectre, détecte les pics et propose une identification.</p>
+    <div class="badge-row">
+      <span class="badge"><strong data-i18n="badge.local">100% local</strong></span>
+      <span class="badge"><strong data-i18n="badge.noaccount">Aucun compte</strong></span>
+      <span class="badge"><strong data-i18n="badge.free">Gratuit</strong></span>
+    </div>
+  </header>
+
+  <section class="reveal">
+    <p class="section-sub" data-i18n="analyze.formatsNote">Formats acceptés : .csv, .tsv, .txt — deux colonnes numériques. En-têtes et lignes non numériques ignorés automatiquement.</p>
+
+    <div class="dropzone" id="analyzeDropzone">
+      <p data-i18n="drop.title"><strong>Glissez-déposez</strong> votre fichier ici</p>
+      <p class="hint" data-i18n="drop.or">ou</p>
+      <div class="btn-row">
+        <button type="button" id="analyzeBrowseBtn" data-i18n="btn.browse">Parcourir mes fichiers</button>
+      </div>
+      <input type="file" id="analyzeFileInput" accept=".csv,.tsv,.txt,.dat">
+    </div>
+    <p id="analyzeStatus" role="status" aria-live="polite"></p>
+
+    <div class="analyze-results" id="analyzeResults">
+      <div class="analyze-form">
+        <div>
+          <label for="sampleNameInput" data-i18n="analyze.sampleName">Nom de l'échantillon (optionnel)</label>
+          <input type="text" id="sampleNameInput">
+        </div>
+        <div>
+          <label data-i18n="analyze.modeLabel">Mode de lecture</label>
+          <div class="mode-options">
+            <label><input type="radio" name="peakMode" value="auto" checked> <span data-i18n="analyze.modeAuto">Automatique</span></label>
+            <label><input type="radio" name="peakMode" value="dip"> <span data-i18n="analyze.modeDip">Creux = pics (transmittance)</span></label>
+            <label><input type="radio" name="peakMode" value="peak"> <span data-i18n="analyze.modePeak">Sommets = pics (absorbance)</span></label>
+          </div>
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label for="notesInput" style="display:block;font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);margin-bottom:5px;" data-i18n="analyze.notes">Notes (optionnel)</label>
+        <textarea id="notesInput" rows="2"></textarea>
+      </div>
+
+      <div class="file-card">
+        <svg class="mini-trace" id="analyzeTrace" viewBox="0 0 800 200" preserveAspectRatio="none" role="img" aria-label="Tracé du spectre importé"></svg>
+        <div class="file-meta-line" style="margin:8px 0 6px;font-weight:500;" data-i18n="peaks.title">Pics détectés</div>
+        <div id="analyzePeaksList"></div>
+      </div>
+
+      <div class="card-actions" style="margin-top:14px;">
+        <button type="button" class="secondary" id="generateReportBtn" data-i18n="analyze.generateReport">Générer le rapport</button>
+        <button type="button" class="ghost" id="exportDataBtn" data-i18n="analyze.exportData">Exporter les données (.csv)</button>
+        <button type="button" class="ghost" id="exportPeaksBtn" data-i18n="analyze.exportPeaks">Exporter les pics (.csv)</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <p class="section-sub"><span data-i18n="analyze.crosslink">Un fichier JCAMP-DX (.jdx / .dx) plutôt qu'un CSV ? →</span> <a href="convertir.html" data-i18n="nav.convert">Convertir</a></p>
+  </section>
+
+  <footer>
+    <p data-i18n="analyze.footer">Prototype — outil d'analyse de spectres à partir de données brutes (CSV/TSV/TXT). Identification indicative, pas une expertise.</p>
+  </footer>
+
+</div>
+
+<!-- printable report, hidden on screen, shown only when printing -->
+<div id="reportContent">
+  <div class="report-header">
+    <h1 id="reportTitle">Rapport d'analyse spectrale</h1>
+    <div class="report-meta" id="reportMeta"></div>
+  </div>
+  <svg id="reportTrace" viewBox="0 0 800 220" preserveAspectRatio="none" width="700"></svg>
+  <table class="report-table" id="reportPeaksTable"></table>
+  <p class="report-disclaimer" id="reportDisclaimer"></p>
+</div>
+
+<script src="common.js"></script>
+<script>
+const analyzeDropzone = document.getElementById('analyzeDropzone');
+const analyzeFileInput = document.getElementById('analyzeFileInput');
+const analyzeBrowseBtn = document.getElementById('analyzeBrowseBtn');
+const analyzeStatus = document.getElementById('analyzeStatus');
+const analyzeResults = document.getElementById('analyzeResults');
+const analyzePeaksList = document.getElementById('analyzePeaksList');
+const sampleNameInput = document.getElementById('sampleNameInput');
+const notesInput = document.getElementById('notesInput');
+
+let currentData = null; // { xs, ys }
+let currentPeaks = [];
+let currentFileName = '';
+
+analyzeBrowseBtn.addEventListener('click', () => analyzeFileInput.click());
+analyzeFileInput.addEventListener('change', (e) => { if (e.target.files[0]) handleAnalyzeFile(e.target.files[0]); });
+
+['dragenter', 'dragover'].forEach(evt =>
+  analyzeDropzone.addEventListener(evt, (e) => { e.preventDefault(); analyzeDropzone.classList.add('drag-over'); })
+);
+['dragleave', 'drop'].forEach(evt =>
+  analyzeDropzone.addEventListener(evt, (e) => { e.preventDefault(); analyzeDropzone.classList.remove('drag-over'); })
+);
+analyzeDropzone.addEventListener('drop', (e) => {
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) handleAnalyzeFile(e.dataTransfer.files[0]);
+});
+
+function handleAnalyzeFile(file) {
+  currentFileName = file.name;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      currentData = parseGenericXY(reader.result);
+      analyzeStatus.textContent = t('status.done');
+      runAnalysis();
+    } catch (err) {
+      analyzeStatus.textContent = t('status.decodeFail') + ' ' + err.message;
+      analyzeResults.classList.remove('visible');
+    }
+  };
+  reader.onerror = () => { analyzeStatus.textContent = t('status.readError'); };
+  reader.readAsText(file);
+}
+
+function getSelectedMode() {
+  const checked = document.querySelector('input[name="peakMode"]:checked');
+  return checked ? checked.value : 'auto';
+}
+
+function runAnalysis() {
+  if (!currentData) return;
+  const selection = getSelectedMode();
+  const mode = selection === 'auto' ? guessBaselineMode(currentData.ys) : selection;
+  currentPeaks = detectPeaks(currentData.xs, currentData.ys, mode).map(p =>
+    Object.assign({}, p, { groups: matchPeakToGroups(p.x) })
+  );
+  const svg = document.getElementById('analyzeTrace');
+  renderTrace(svg, currentData.xs, currentData.ys, { padding: 14 });
+  addPeakMarkers(svg, currentData.xs, currentData.ys, currentPeaks);
+  analyzePeaksList.innerHTML = peaksListHTML(currentPeaks);
+  analyzeResults.classList.add('visible');
+}
+
+document.querySelectorAll('input[name="peakMode"]').forEach(r => r.addEventListener('change', runAnalysis));
+
+document.getElementById('exportDataBtn').addEventListener('click', () => {
+  if (!currentData) return;
+  download(baseName(currentFileName || 'spectre') + '_data.csv', toCSV(currentData.xs, currentData.ys, 'x', 'y'), 'text/csv');
+});
+
+document.getElementById('exportPeaksBtn').addEventListener('click', () => {
+  let csv = 'wavenumber,groups\n';
+  currentPeaks.forEach(p => {
+    const label = p.groups.length ? p.groups.map(g => g.label).join(' / ') : t('peaks.unidentified');
+    csv += Math.round(p.x) + ',' + label.replace(/,/g, ';') + '\n';
+  });
+  download(baseName(currentFileName || 'spectre') + '_pics.csv', csv, 'text/csv');
+});
+
+document.getElementById('generateReportBtn').addEventListener('click', () => {
+  if (!currentData) return;
+  const name = sampleNameInput.value.trim();
+  const notes = notesInput.value.trim();
+  document.getElementById('reportTitle').textContent = t('analyze.reportTitle');
+  const dateStr = new Date().toLocaleDateString(currentLang === 'en' ? 'en-US' : 'fr-FR');
+  let metaHtml = '<strong>' + t('analyze.reportGenerated') + ':</strong> ' + dateStr;
+  if (name) metaHtml += ' &nbsp;·&nbsp; <strong>' + t('analyze.reportSample') + ':</strong> ' + escapeHtml(name);
+  if (notes) metaHtml += '<br><strong>' + t('analyze.reportNotes') + ':</strong> ' + escapeHtml(notes);
+  document.getElementById('reportMeta').innerHTML = metaHtml;
+
+  const reportSvg = document.getElementById('reportTrace');
+  renderTrace(reportSvg, currentData.xs, currentData.ys, { padding: 16 });
+  addPeakMarkers(reportSvg, currentData.xs, currentData.ys, currentPeaks);
+
+  let tableHtml = '<tr><th>' + t('analyze.reportPeaksHeaderX') + ' (cm⁻¹)</th><th>' + t('analyze.reportPeaksHeaderGroup') + '</th></tr>';
+  currentPeaks.forEach(p => {
+    const label = p.groups.length ? p.groups.map(g => g.label).join(' / ') : t('peaks.unidentified');
+    tableHtml += '<tr><td>' + Math.round(p.x) + '</td><td>' + escapeHtml(label) + '</td></tr>';
+  });
+  document.getElementById('reportPeaksTable').innerHTML = tableHtml;
+  document.getElementById('reportDisclaimer').textContent = t('analyze.reportDisclaimer');
+
+  window.print();
+});
+
+document.addEventListener('languagechange', () => { if (currentData) runAnalysis(); });
+</script>
+
+</body>
+</html>

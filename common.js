@@ -800,6 +800,30 @@ const TRANSLATIONS = {
     'peaks.unidentified': 'non identifié',
     'compare.dragHint': '🖱 Glissez pour tourner · molette pour zoomer',
 
+    'nav.analyze': 'Analyser',
+    'analyze.eyebrow': 'Outil 01 — analyse de spectre',
+    'analyze.h1': 'Importez vos données, <span class="accent">identifiez les groupes</span> automatiquement.',
+    'analyze.lede': 'Déposez un fichier CSV, TSV ou TXT contenant deux colonnes numériques (nombre d\'onde, intensité). Le site trace le spectre, détecte les pics et propose une identification.',
+    'analyze.formatsNote': 'Formats acceptés : .csv, .tsv, .txt — deux colonnes numériques. En-têtes et lignes non numériques ignorés automatiquement.',
+    'analyze.crosslink': 'Un fichier JCAMP-DX (.jdx / .dx) plutôt qu\'un CSV ? →',
+    'analyze.modeLabel': 'Mode de lecture',
+    'analyze.modeAuto': 'Automatique', 'analyze.modeDip': 'Creux = pics (transmittance)', 'analyze.modePeak': 'Sommets = pics (absorbance)',
+    'analyze.sampleName': 'Nom de l\'échantillon (optionnel)',
+    'analyze.notes': 'Notes (optionnel)',
+    'analyze.generateReport': 'Générer le rapport',
+    'analyze.exportData': 'Exporter les données (.csv)',
+    'analyze.exportPeaks': 'Exporter les pics (.csv)',
+    'analyze.printReport': 'Imprimer / Enregistrer en PDF',
+    'analyze.reportTitle': 'Rapport d\'analyse spectrale',
+    'analyze.reportGenerated': 'Généré le',
+    'analyze.reportSample': 'Échantillon',
+    'analyze.reportNotes': 'Notes',
+    'analyze.reportPeaksHeaderX': 'Nombre d\'onde',
+    'analyze.reportPeaksHeaderGroup': 'Groupe(s) identifié(s)',
+    'analyze.reportDisclaimer': 'Identification automatique indicative, basée uniquement sur la position des pics détectés. À valider par un spécialiste avant toute conclusion.',
+    'analyze.parseError': 'Impossible d\'extraire des paires X/Y exploitables de ce fichier.',
+    'analyze.footer': 'Prototype — outil d\'analyse de spectres à partir de données brutes (CSV/TSV/TXT). Identification indicative, pas une expertise.',
+
     'lang.toggleLabel': 'Langue',
 
     'home.eyebrow': 'spectra.tools — outils de laboratoire',
@@ -820,21 +844,25 @@ const TRANSLATIONS = {
     'home.upcomingTitle': 'Prochains outils',
     'home.upcomingSub': 'Convertisseur, comparateur et calculateur de formulation sont en ligne. Voici ce qui pourrait suivre.',
     'home.footer': 'Prototype — outils de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).',
+    'home.tool0Title': 'Analyseur', 'home.tool0Desc': 'Importez un CSV/TXT, identifiez les groupes fonctionnels automatiquement, générez un rapport.',
+    'home.tool1Title': 'Convertisseur', 'home.tool1Desc': 'Fichiers JCAMP-DX (.jdx, .dx) vers CSV ou JSON, un par un ou par lot.',
+    'home.tool2Title': 'Comparateur', 'home.tool2Desc': 'Superposez plusieurs spectres sur un même graphique pour repérer les écarts.',
+    'home.tool3Title': 'Calculateur de formulation', 'home.tool3Desc': 'Composants et propriétés paramétrables, résultats en direct avec curseurs.',
 
-    'convert.eyebrow': 'Outil 01 — conversion de spectres',
+    'convert.eyebrow': 'Outil 02 — conversion de spectres',
     'convert.h1': 'Vos spectres JCAMP&#8209;DX, <span class="accent">propres et lisibles</span>.',
     'convert.lede': 'Déposez un ou plusieurs fichiers <strong>.jdx</strong> / <strong>.dx</strong>. L\'outil décode l\'en-tête, reconstruit les points X/Y — y compris les formats compressés SQZ/DIF/DUP — et vous rend des fichiers exploitables tout de suite.',
     'convert.formatsNote': 'Formats acceptés : JCAMP-DX (.jdx, .dx) — blocs XYDATA (X++(Y..Y)) et XYPOINTS.',
     'convert.crosslink': 'Envie de superposer plusieurs spectres au lieu de les convertir un par un ? →',
     'convert.footer': 'Prototype — outil de conversion de fichiers de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).',
 
-    'compare.eyebrow': 'Outil 02 — comparaison de spectres',
+    'compare.eyebrow': 'Outil 03 — comparaison de spectres',
     'compare.h1': 'Superposez vos spectres, <span class="accent">repérez les écarts</span> d\'un coup d\'œil.',
     'compare.lede': 'Chargez deux fichiers ou plus pour les afficher sur un même graphique, chacun dans sa couleur, avec une légende pour les identifier et les retirer.',
     'compare.crosslink': 'Besoin d\'exporter un seul spectre en CSV/JSON plutôt que de le comparer ? →',
     'compare.footer': 'Prototype — outil de comparaison de fichiers de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).',
 
-    'formulation.eyebrow': 'Outil 03 — calculateur de formulation',
+    'formulation.eyebrow': 'Outil 04 — calculateur de formulation',
     'formulation.h1': 'Ajustez vos dosages, <span class="accent">visualisez l\'effet</span> en direct.',
     'formulation.lede': 'Définissez vos composants et des règles simples reliant leur dosage à des propriétés estimées. Ajustez les curseurs pour explorer des compromis.',
     'formulation.disclaimer': '⚠ Modèle linéaire à règles que <em>vous</em> définissez — pas une simulation physico-chimique. Utile pour explorer des tendances et préparer un plan d\'essais, pas pour remplacer des mesures réelles.',
@@ -887,6 +915,30 @@ const TRANSLATIONS = {
     'peaks.unidentified': 'unidentified',
     'compare.dragHint': '🖱 Drag to rotate · scroll to zoom',
 
+    'nav.analyze': 'Analyze',
+    'analyze.eyebrow': 'Tool 01 — spectrum analysis',
+    'analyze.h1': 'Import your data, <span class="accent">identify groups</span> automatically.',
+    'analyze.lede': 'Drop a CSV, TSV, or TXT file with two numeric columns (wavenumber, intensity). The site plots the spectrum, detects peaks, and suggests an identification.',
+    'analyze.formatsNote': 'Accepted formats: .csv, .tsv, .txt — two numeric columns. Headers and non-numeric lines are skipped automatically.',
+    'analyze.crosslink': 'A JCAMP-DX file (.jdx / .dx) instead of a CSV? →',
+    'analyze.modeLabel': 'Reading mode',
+    'analyze.modeAuto': 'Automatic', 'analyze.modeDip': 'Dips = peaks (transmittance)', 'analyze.modePeak': 'Bumps = peaks (absorbance)',
+    'analyze.sampleName': 'Sample name (optional)',
+    'analyze.notes': 'Notes (optional)',
+    'analyze.generateReport': 'Generate report',
+    'analyze.exportData': 'Export data (.csv)',
+    'analyze.exportPeaks': 'Export peaks (.csv)',
+    'analyze.printReport': 'Print / Save as PDF',
+    'analyze.reportTitle': 'Spectral analysis report',
+    'analyze.reportGenerated': 'Generated on',
+    'analyze.reportSample': 'Sample',
+    'analyze.reportNotes': 'Notes',
+    'analyze.reportPeaksHeaderX': 'Wavenumber',
+    'analyze.reportPeaksHeaderGroup': 'Identified group(s)',
+    'analyze.reportDisclaimer': 'Automatic identification is indicative only, based solely on detected peak positions. Should be validated by a specialist before drawing any conclusion.',
+    'analyze.parseError': 'Unable to extract usable X/Y pairs from this file.',
+    'analyze.footer': 'Prototype — spectrum analysis tool from raw data (CSV/TSV/TXT). Indicative identification, not an expert assessment.',
+
     'lang.toggleLabel': 'Language',
 
     'home.eyebrow': 'spectra.tools — lab tools',
@@ -907,21 +959,25 @@ const TRANSLATIONS = {
     'home.upcomingTitle': 'Upcoming tools',
     'home.upcomingSub': 'Converter, comparator, and formulation calculator are live. Here\'s what could come next.',
     'home.footer': 'Prototype — spectroscopy tools. JCAMP-DX is an open standard used by most laboratory software (IR, Raman, UV-Vis, NMR).',
+    'home.tool0Title': 'Analyzer', 'home.tool0Desc': 'Import a CSV/TXT, automatically identify functional groups, generate a report.',
+    'home.tool1Title': 'Converter', 'home.tool1Desc': 'JCAMP-DX files (.jdx, .dx) to CSV or JSON, one at a time or in batch.',
+    'home.tool2Title': 'Comparator', 'home.tool2Desc': 'Overlay several spectra on the same chart to spot the differences.',
+    'home.tool3Title': 'Formulation calculator', 'home.tool3Desc': 'Configurable components and properties, live results with sliders.',
 
-    'convert.eyebrow': 'Tool 01 — spectrum conversion',
+    'convert.eyebrow': 'Tool 02 — spectrum conversion',
     'convert.h1': 'Your JCAMP&#8209;DX spectra, <span class="accent">clean and readable</span>.',
     'convert.lede': 'Drop one or more <strong>.jdx</strong> / <strong>.dx</strong> files. The tool decodes the header, reconstructs the X/Y points — including SQZ/DIF/DUP compressed formats — and gives you usable files right away.',
     'convert.formatsNote': 'Accepted formats: JCAMP-DX (.jdx, .dx) — XYDATA (X++(Y..Y)) and XYPOINTS blocks.',
     'convert.crosslink': 'Want to overlay several spectra instead of converting them one by one? →',
     'convert.footer': 'Prototype — spectroscopy file conversion tool. JCAMP-DX is an open standard used by most laboratory software (IR, Raman, UV-Vis, NMR).',
 
-    'compare.eyebrow': 'Tool 02 — spectrum comparison',
+    'compare.eyebrow': 'Tool 03 — spectrum comparison',
     'compare.h1': 'Overlay your spectra, <span class="accent">spot the differences</span> at a glance.',
     'compare.lede': 'Load two or more files to display them on the same chart, each in its own color, with a legend to identify and remove them.',
     'compare.crosslink': 'Need to export a single spectrum to CSV/JSON instead of comparing it? →',
     'compare.footer': 'Prototype — spectroscopy file comparison tool. JCAMP-DX is an open standard used by most laboratory software (IR, Raman, UV-Vis, NMR).',
 
-    'formulation.eyebrow': 'Tool 03 — formulation calculator',
+    'formulation.eyebrow': 'Tool 04 — formulation calculator',
     'formulation.h1': 'Adjust your dosages, <span class="accent">see the effect</span> live.',
     'formulation.lede': 'Define your components and simple rules linking their dosage to estimated properties. Adjust the sliders to explore trade-offs.',
     'formulation.disclaimer': '⚠ A linear rule-based model that <em>you</em> define — not a physico-chemical simulation. Useful for exploring trends and preparing a test plan, not for replacing real measurements.',
@@ -1115,4 +1171,69 @@ function peaksListHTML(peaks) {
            '<span class="peak-label">' + escapeHtml(label) + '</span></li>';
   }).join('');
   return '<ul class="peaks-list">' + items + '</ul>';
+}
+
+/* =========================================================
+   Generic delimited-text spectrum import (CSV / TSV / TXT)
+   ========================================================= */
+function tryParseNumber(str) {
+  str = str.trim();
+  if (str === '') return NaN;
+  if (/^[+-]?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(str)) return parseFloat(str);
+  const swapped = str.replace(',', '.'); // European decimal comma
+  if (/^[+-]?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(swapped)) return parseFloat(swapped);
+  return NaN;
+}
+
+function parseGenericXY(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const delimiters = [
+    { name: 'tab', re: /\t+/ },
+    { name: 'semicolon', re: /;+/ },
+    { name: 'comma', re: /,+/ },
+    { name: 'whitespace', re: /\s+/ },
+  ];
+
+  function attempt(delim) {
+    const xs = [], ys = [];
+    for (const line of lines) {
+      const parts = line.split(delim.re).map(p => p.trim()).filter(p => p !== '');
+      if (parts.length < 2) continue;
+      const x = tryParseNumber(parts[0]);
+      const y = tryParseNumber(parts[1]);
+      if (!isNaN(x) && !isNaN(y)) { xs.push(x); ys.push(y); }
+    }
+    return { xs, ys };
+  }
+
+  let best = { xs: [], ys: [] };
+  for (const delim of delimiters) {
+    const result = attempt(delim);
+    if (result.xs.length > best.xs.length) best = result;
+  }
+
+  if (best.xs.length < 3) {
+    throw new Error(t('analyze.parseError'));
+  }
+
+  let ascCount = 0, descCount = 0;
+  for (let i = 1; i < best.xs.length; i++) {
+    if (best.xs[i] > best.xs[i - 1]) ascCount++;
+    else if (best.xs[i] < best.xs[i - 1]) descCount++;
+  }
+  const monotonicRatio = Math.max(ascCount, descCount) / (best.xs.length - 1);
+  if (monotonicRatio < 0.9) {
+    const paired = best.xs.map((x, i) => [x, best.ys[i]]).sort((a, b) => b[0] - a[0]);
+    best = { xs: paired.map(p => p[0]), ys: paired.map(p => p[1]) };
+  }
+
+  return best;
+}
+
+function guessBaselineMode(ys) {
+  const sorted = ys.slice().sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const min = sorted[0], max = sorted[sorted.length - 1];
+  const distToMax = max - median, distToMin = median - min;
+  return distToMax < distToMin ? 'dip' : 'peak';
 }
