@@ -27,6 +27,8 @@
   .tool-link-card p{font-size:13.5px;color:var(--ink-soft);margin:0 0 14px;}
   .tool-link-card .go{font-family:var(--font-mono);font-size:12.5px;color:var(--verdigris-dark);}
 </style>
+<!-- Cloudflare Web Analytics : remplace TON_TOKEN_ICI par le token fourni après inscription sur dash.cloudflare.com -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "TON_TOKEN_ICI"}'></script>
 </head>
 <body>
 
@@ -43,11 +45,15 @@
       spectra.tools
     </a>
     <div class="nav-links">
-      <a href="convertir.html">Convertir</a>
-      <a href="comparer.html">Comparer</a>
-      <a href="formulation.html">Formulation</a>
-      <a href="#formats">Formats</a>
-      <a href="#upcoming">Prochains outils</a>
+      <a href="convertir.html" data-i18n="nav.convert">Convertir</a>
+      <a href="comparer.html" data-i18n="nav.compare">Comparer</a>
+      <a href="formulation.html" data-i18n="nav.formulation">Formulation</a>
+      <a href="#formats" data-i18n="nav.formats">Formats</a>
+      <a href="#upcoming" data-i18n="nav.upcoming">Prochains outils</a>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Choix de la langue">
+      <button type="button" data-lang="fr" class="active">FR</button>
+      <button type="button" data-lang="en">EN</button>
     </div>
   </div>
 </nav>
@@ -56,18 +62,18 @@
 
   <header class="hero">
     <div class="hero-content">
-      <div class="eyebrow">spectra.tools — outils de laboratoire</div>
-      <h1>Vos spectres, <span class="accent">en clair</span>.</h1>
-      <p class="lede">Convertir, comparer et explorer des spectres JCAMP-DX — directement dans votre navigateur, sans compte, sans envoi de fichier.</p>
+      <div class="eyebrow" data-i18n="home.eyebrow">spectra.tools — outils de laboratoire</div>
+      <h1 data-i18n-html="home.h1">Vos spectres, <span class="accent">en clair</span>.</h1>
+      <p class="lede" data-i18n="home.lede">Convertir, comparer et explorer des spectres JCAMP-DX — directement dans votre navigateur, sans compte, sans envoi de fichier.</p>
       <div class="badge-row">
-        <span class="badge"><strong>100% local</strong></span>
-        <span class="badge"><strong>Aucun compte</strong></span>
-        <span class="badge"><strong>Gratuit</strong></span>
+        <span class="badge"><strong data-i18n="badge.local">100% local</strong></span>
+        <span class="badge"><strong data-i18n="badge.noaccount">Aucun compte</strong></span>
+        <span class="badge"><strong data-i18n="badge.free">Gratuit</strong></span>
       </div>
 
       <div class="hero-panels">
         <div class="groups-panel">
-          <div class="label">GROUPEMENTS FONCTIONNELS — REPÈRES IR</div>
+          <div class="label" data-i18n="home.groupsLabel">GROUPEMENTS FONCTIONNELS — REPÈRES IR</div>
           <div class="groups-list">
             <div class="row"><span class="swatch" style="background:#83AEE0;"></span><span class="name">O–H (alcool)</span><span class="range">3200–3550 cm⁻¹</span></div>
             <div class="row"><span class="swatch" style="background:#5FA8D6;"></span><span class="name">O–H (acide)</span><span class="range">2500–3300 cm⁻¹</span></div>
@@ -82,7 +88,7 @@
           </div>
         </div>
         <div class="molecule-panel">
-          <div class="label"><span>STRUCTURE — MODÈLE 3D</span><span>rotation automatique</span></div>
+          <div class="label"><span data-i18n="home.moleculeLabel">STRUCTURE — MODÈLE 3D</span><span data-i18n="home.moleculeSub">rotation automatique</span></div>
           <div id="moleculeCanvas" role="img" aria-label="Modèle moléculaire 3D en rotation, à titre illustratif"></div>
         </div>
       </div>
@@ -113,7 +119,7 @@
   </header>
 
   <section class="reveal">
-    <h2>Exemples annotés</h2>
+    <h2 data-i18n="home.examplesTitle">Exemples annotés</h2>
     <p class="section-sub">Trois signatures IR typiques, avec les groupements fonctionnels repérés directement sur le tracé.</p>
     <div class="examples-grid">
       <div class="example-card">
@@ -135,32 +141,32 @@
   </section>
 
   <section class="reveal">
-    <h2>Nos outils</h2>
-    <p class="section-sub">Chacun a sa propre page — clique pour l'ouvrir.</p>
+    <h2 data-i18n="home.toolsTitle">Nos outils</h2>
+    <p class="section-sub" data-i18n="home.toolsSub">Chacun a sa propre page — clique pour l'ouvrir.</p>
     <div class="tool-links-grid">
       <a class="tool-link-card" href="convertir.html">
         <div class="num">OUTIL 01</div>
         <h3>Convertisseur</h3>
         <p>Fichiers JCAMP-DX (.jdx, .dx) vers CSV ou JSON, un par un ou par lot.</p>
-        <div class="go">Ouvrir →</div>
+        <div class="go" data-i18n="home.open">Ouvrir →</div>
       </a>
       <a class="tool-link-card" href="comparer.html">
         <div class="num">OUTIL 02</div>
         <h3>Comparateur</h3>
         <p>Superposez plusieurs spectres sur un même graphique pour repérer les écarts.</p>
-        <div class="go">Ouvrir →</div>
+        <div class="go" data-i18n="home.open">Ouvrir →</div>
       </a>
       <a class="tool-link-card" href="formulation.html">
         <div class="num">OUTIL 03</div>
         <h3>Calculateur de formulation</h3>
         <p>Composants et propriétés paramétrables, résultats en direct avec curseurs.</p>
-        <div class="go">Ouvrir →</div>
+        <div class="go" data-i18n="home.open">Ouvrir →</div>
       </a>
     </div>
   </section>
 
   <section class="reveal">
-    <h2>Comprendre vos spectres</h2>
+    <h2 data-i18n="home.understandTitle">Comprendre vos spectres</h2>
     <p class="section-sub">De quoi il s'agit, et comment ce site s'en sert.</p>
     <div class="explainer-grid">
       <div class="format-card">
@@ -177,8 +183,8 @@
   </section>
 
   <section id="formats" class="reveal">
-    <h2>Ce que le site sait faire</h2>
-    <p class="section-sub">Version 1 — le socle avant d'ajouter d'autres formats.</p>
+    <h2 data-i18n="home.formatsTitle">Ce que le site sait faire</h2>
+    <p class="section-sub" data-i18n="home.formatsSub">Version 1 — le socle avant d'ajouter d'autres formats.</p>
     <div class="formats-grid">
       <div class="format-card">
         <h3>Pris en charge</h3>
@@ -196,7 +202,7 @@
   </section>
 
   <section id="upcoming" class="reveal">
-    <h2>Prochains outils</h2>
+    <h2 data-i18n="home.upcomingTitle">Prochains outils</h2>
     <p class="section-sub">Convertisseur, comparateur et calculateur de formulation sont en ligne. Voici ce qui pourrait suivre.</p>
     <div class="tools-grid">
       <div class="tool-card">
@@ -208,7 +214,7 @@
   </section>
 
   <footer>
-    <p>Prototype — outils de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).</p>
+    <p data-i18n="home.footer">Prototype — outils de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).</p>
   </footer>
 
 </div>

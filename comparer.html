@@ -16,6 +16,8 @@
 <style>
   .page-header{padding:36px 0 8px;}
 </style>
+<!-- Cloudflare Web Analytics : remplace TON_TOKEN_ICI par le token fourni après inscription sur dash.cloudflare.com -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "TON_TOKEN_ICI"}'></script>
 </head>
 <body>
 
@@ -28,11 +30,15 @@
       spectra.tools
     </a>
     <div class="nav-links">
-      <a href="convertir.html">Convertir</a>
-      <a href="comparer.html" class="active">Comparer</a>
-      <a href="formulation.html">Formulation</a>
-      <a href="index.html#formats">Formats</a>
-      <a href="index.html#upcoming">Prochains outils</a>
+      <a href="convertir.html" data-i18n="nav.convert">Convertir</a>
+      <a href="comparer.html" class="active" data-i18n="nav.compare">Comparer</a>
+      <a href="formulation.html" data-i18n="nav.formulation">Formulation</a>
+      <a href="index.html#formats" data-i18n="nav.formats">Formats</a>
+      <a href="index.html#upcoming" data-i18n="nav.upcoming">Prochains outils</a>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Choix de la langue">
+      <button type="button" data-lang="fr" class="active">FR</button>
+      <button type="button" data-lang="en">EN</button>
     </div>
   </div>
 </nav>
@@ -40,51 +46,51 @@
 <div class="wrap">
 
   <header class="page-header reveal">
-    <div class="eyebrow">Outil 02 — comparaison de spectres</div>
-    <h1 style="max-width:20ch;">Superposez vos spectres, <span class="accent">repérez les écarts</span> d'un coup d'œil.</h1>
-    <p class="lede">Chargez deux fichiers ou plus pour les afficher sur un même graphique, chacun dans sa couleur, avec une légende pour les identifier et les retirer.</p>
+    <div class="eyebrow" data-i18n="compare.eyebrow">Outil 02 — comparaison de spectres</div>
+    <h1 style="max-width:20ch;" data-i18n-html="compare.h1">Superposez vos spectres, <span class="accent">repérez les écarts</span> d'un coup d'œil.</h1>
+    <p class="lede" data-i18n="compare.lede">Chargez deux fichiers ou plus pour les afficher sur un même graphique, chacun dans sa couleur, avec une légende pour les identifier et les retirer.</p>
     <div class="badge-row">
-      <span class="badge"><strong>100% local</strong></span>
-      <span class="badge"><strong>Aucun compte</strong></span>
-      <span class="badge"><strong>Comparaison multi-fichiers</strong></span>
+      <span class="badge"><strong data-i18n="badge.local">100% local</strong></span>
+      <span class="badge"><strong data-i18n="badge.noaccount">Aucun compte</strong></span>
+      <span class="badge"><strong data-i18n="badge.multifile">Comparaison multi-fichiers</strong></span>
     </div>
   </header>
 
   <section id="comparator" class="reveal">
     <div class="dropzone" id="compareDropzone">
-      <p><strong>Glissez-déposez</strong> vos fichiers ici</p>
-      <p class="hint">ou</p>
+      <p data-i18n="drop.title"><strong>Glissez-déposez</strong> vos fichiers ici</p>
+      <p class="hint" data-i18n="drop.or">ou</p>
       <div class="btn-row">
-        <button type="button" id="compareBrowseBtn">Parcourir mes fichiers</button>
-        <button type="button" id="compareSampleBtn" class="secondary">Essayer avec deux exemples</button>
+        <button type="button" id="compareBrowseBtn" data-i18n="btn.browse">Parcourir mes fichiers</button>
+        <button type="button" id="compareSampleBtn" class="secondary" data-i18n="btn.tryTwoExamples">Essayer avec deux exemples</button>
       </div>
       <input type="file" id="compareFileInput" accept=".jdx,.dx,.txt" multiple>
     </div>
     <p id="compareStatus" role="status" aria-live="polite"></p>
 
     <div class="view-toggle" id="viewToggle">
-      <button type="button" data-view="2d" class="active">Vue 2D</button>
-      <button type="button" data-view="3d">Vue 3D</button>
+      <button type="button" data-view="2d" class="active" data-i18n="btn.view2d">Vue 2D</button>
+      <button type="button" data-view="3d" data-i18n="btn.view3d">Vue 3D</button>
     </div>
 
     <div class="compare-panel" id="comparePanel" style="margin-top:0;">
       <svg class="compare-chart" id="compareChart" viewBox="0 0 860 320" preserveAspectRatio="none" role="img" aria-label="Superposition des spectres chargés"></svg>
       <div class="compare-legend" id="compareLegend"></div>
-      <p class="compare-empty" id="compareEmptyMsg">Aucun spectre chargé pour l'instant.</p>
+      <p class="compare-empty" id="compareEmptyMsg" data-i18n="compare.empty">Aucun spectre chargé pour l'instant.</p>
     </div>
 
     <div class="compare-panel" id="compare3DPanel" style="margin-top:0;display:none;">
       <div id="compare3D"></div>
-      <p class="compare-3d-empty" id="compare3DEmptyMsg">Aucun spectre chargé pour l'instant.</p>
+      <p class="compare-3d-empty" id="compare3DEmptyMsg" data-i18n="compare.empty">Aucun spectre chargé pour l'instant.</p>
     </div>
   </section>
 
   <section class="reveal">
-    <p class="section-sub">Besoin d'exporter un seul spectre en CSV/JSON plutôt que de le comparer ? → <a href="convertir.html">Convertisseur</a></p>
+    <p class="section-sub"><span data-i18n="compare.crosslink">Besoin d'exporter un seul spectre en CSV/JSON plutôt que de le comparer ? →</span> <a href="convertir.html">Convertisseur</a></p>
   </section>
 
   <footer>
-    <p>Prototype — outil de comparaison de fichiers de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).</p>
+    <p data-i18n="compare.footer">Prototype — outil de comparaison de fichiers de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).</p>
   </footer>
 
 </div>
@@ -123,17 +129,17 @@ compareDropzone.addEventListener('drop', (e) => {
 
 function handleCompareFiles(fileList) {
   const files = Array.from(fileList);
-  compareStatus.textContent = files.length + ' fichier(s) reçu(s) — traitement en cours…';
+  compareStatus.textContent = files.length + ' ' + t('status.received');
   let remaining = files.length;
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = () => {
       addCompareItem(file.name, reader.result);
       remaining--;
-      if (remaining === 0) compareStatus.textContent = 'Traitement terminé.';
+      if (remaining === 0) compareStatus.textContent = t('status.done');
     };
     reader.onerror = () => {
-      compareStatus.textContent = "Impossible de lire " + file.name + ".";
+      compareStatus.textContent = t('status.readErrorNamed') + ' ' + file.name + '.';
       remaining--;
     };
     reader.readAsText(file);
@@ -147,7 +153,7 @@ function addCompareItem(name, text) {
     compareItems.push({ id: compareIdSeq++, name, meta, xs, ys, color });
     renderComparator();
   } catch (err) {
-    compareStatus.textContent = "Échec sur " + name + " — " + err.message;
+    compareStatus.textContent = t('status.decodeFailOn') + ' ' + name + ' — ' + err.message;
   }
 }
 
@@ -269,7 +275,7 @@ function renderComparator() {
   xTitle.setAttribute('x', (pad + w - pad) / 2); xTitle.setAttribute('y', h - 4);
   xTitle.setAttribute('text-anchor', 'middle');
   xTitle.setAttribute('class', 'axis-label');
-  xTitle.textContent = "Nombre d'onde (cm⁻¹)";
+  xTitle.textContent = t('compare.axisX');
   compareChart.appendChild(xTitle);
 
   const yLabelTop = document.createElementNS(ns, 'text');
@@ -289,13 +295,13 @@ function renderComparator() {
   const yTitle = document.createElementNS(ns, 'text');
   yTitle.setAttribute('x', 10); yTitle.setAttribute('y', pad - 14);
   yTitle.setAttribute('class', 'axis-label');
-  yTitle.textContent = 'Intensité';
+  yTitle.textContent = t('compare.axisY');
   compareChart.appendChild(yTitle);
 
   compareItems.forEach(it => {
     const chip = document.createElement('div');
     chip.className = 'legend-chip';
-    chip.innerHTML = `<span class="legend-swatch" style="background:${it.color}"></span>${escapeHtml(it.name)}<button type="button" aria-label="Retirer ${escapeHtml(it.name)}">×</button>`;
+    chip.innerHTML = `<span class="legend-swatch" style="background:${it.color}"></span>${escapeHtml(it.name)}<button type="button" aria-label="${t('compare.remove')} ${escapeHtml(it.name)}">×</button>`;
     chip.querySelector('button').addEventListener('click', () => removeCompareItem(it.id));
     compareLegend.appendChild(chip);
   });
@@ -346,6 +352,8 @@ renderComparator = function() {
   _origRenderComparator();
   refresh3DView();
 };
+
+document.addEventListener('languagechange', () => renderComparator());
 </script>
 
 </body>

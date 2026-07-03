@@ -16,6 +16,8 @@
 <style>
   .page-header{padding:36px 0 8px;}
 </style>
+<!-- Cloudflare Web Analytics : remplace TON_TOKEN_ICI par le token fourni après inscription sur dash.cloudflare.com -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "TON_TOKEN_ICI"}'></script>
 </head>
 <body>
 
@@ -28,11 +30,15 @@
       spectra.tools
     </a>
     <div class="nav-links">
-      <a href="convertir.html" class="active">Convertir</a>
-      <a href="comparer.html">Comparer</a>
-      <a href="formulation.html">Formulation</a>
-      <a href="index.html#formats">Formats</a>
-      <a href="index.html#upcoming">Prochains outils</a>
+      <a href="convertir.html" class="active" data-i18n="nav.convert">Convertir</a>
+      <a href="comparer.html" data-i18n="nav.compare">Comparer</a>
+      <a href="formulation.html" data-i18n="nav.formulation">Formulation</a>
+      <a href="index.html#formats" data-i18n="nav.formats">Formats</a>
+      <a href="index.html#upcoming" data-i18n="nav.upcoming">Prochains outils</a>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Choix de la langue">
+      <button type="button" data-lang="fr" class="active">FR</button>
+      <button type="button" data-lang="en">EN</button>
     </div>
   </div>
 </nav>
@@ -40,25 +46,25 @@
 <div class="wrap">
 
   <header class="page-header reveal">
-    <div class="eyebrow">Outil 01 — conversion de spectres</div>
-    <h1 style="max-width:20ch;">Vos spectres JCAMP&#8209;DX, <span class="accent">propres et lisibles</span>.</h1>
-    <p class="lede">Déposez un ou plusieurs fichiers <strong>.jdx</strong> / <strong>.dx</strong>. L'outil décode l'en-tête, reconstruit les points X/Y — y compris les formats compressés SQZ/DIF/DUP — et vous rend des fichiers exploitables tout de suite.</p>
+    <div class="eyebrow" data-i18n="convert.eyebrow">Outil 01 — conversion de spectres</div>
+    <h1 style="max-width:20ch;" data-i18n-html="convert.h1">Vos spectres JCAMP&#8209;DX, <span class="accent">propres et lisibles</span>.</h1>
+    <p class="lede" data-i18n-html="convert.lede">Déposez un ou plusieurs fichiers <strong>.jdx</strong> / <strong>.dx</strong>. L'outil décode l'en-tête, reconstruit les points X/Y — y compris les formats compressés SQZ/DIF/DUP — et vous rend des fichiers exploitables tout de suite.</p>
     <div class="badge-row">
-      <span class="badge"><strong>100% local</strong></span>
-      <span class="badge"><strong>Aucun compte</strong></span>
-      <span class="badge"><strong>Traitement par lot</strong></span>
+      <span class="badge"><strong data-i18n="badge.local">100% local</strong></span>
+      <span class="badge"><strong data-i18n="badge.noaccount">Aucun compte</strong></span>
+      <span class="badge"><strong data-i18n="badge.batch">Traitement par lot</strong></span>
     </div>
   </header>
 
   <section id="upload-section" class="reveal">
-    <p class="section-sub">Formats acceptés : JCAMP-DX (.jdx, .dx) — blocs XYDATA (X++(Y..Y)) et XYPOINTS.</p>
+    <p class="section-sub" data-i18n="convert.formatsNote">Formats acceptés : JCAMP-DX (.jdx, .dx) — blocs XYDATA (X++(Y..Y)) et XYPOINTS.</p>
 
     <div class="dropzone" id="dropzone">
-      <p><strong>Glissez-déposez</strong> vos fichiers ici</p>
-      <p class="hint">ou</p>
+      <p data-i18n="drop.title"><strong>Glissez-déposez</strong> vos fichiers ici</p>
+      <p class="hint" data-i18n="drop.or">ou</p>
       <div class="btn-row">
-        <button type="button" id="browseBtn">Parcourir mes fichiers</button>
-        <button type="button" id="sampleBtn" class="secondary">Essayer avec un exemple</button>
+        <button type="button" id="browseBtn" data-i18n="btn.browse">Parcourir mes fichiers</button>
+        <button type="button" id="sampleBtn" class="secondary" data-i18n="btn.tryExample">Essayer avec un exemple</button>
       </div>
       <input type="file" id="fileInput" accept=".jdx,.dx,.txt" multiple>
     </div>
@@ -66,16 +72,16 @@
 
     <div class="results" id="results"></div>
     <div class="zip-row" id="zipRow" style="display:none;">
-      <button type="button" id="zipBtn" class="secondary">Télécharger tout (.zip)</button>
+      <button type="button" id="zipBtn" class="secondary" data-i18n="btn.downloadZip">Télécharger tout (.zip)</button>
     </div>
   </section>
 
   <section class="reveal">
-    <p class="section-sub">Envie de superposer plusieurs spectres au lieu de les convertir un par un ? → <a href="comparer.html">Comparateur</a></p>
+    <p class="section-sub"><span data-i18n="convert.crosslink">Envie de superposer plusieurs spectres au lieu de les convertir un par un ? →</span> <a href="comparer.html">Comparateur</a></p>
   </section>
 
   <footer>
-    <p>Prototype — outil de conversion de fichiers de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).</p>
+    <p data-i18n="convert.footer">Prototype — outil de conversion de fichiers de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).</p>
   </footer>
 
 </div>
@@ -111,17 +117,17 @@ dropzone.addEventListener('drop', (e) => {
 
 function handleFiles(fileList) {
   const files = Array.from(fileList);
-  statusEl.textContent = files.length + ' fichier(s) reçu(s) — traitement en cours…';
+  statusEl.textContent = files.length + ' ' + t('status.received');
   let remaining = files.length;
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = () => {
       processOne(file.name, reader.result);
       remaining--;
-      if (remaining === 0) statusEl.textContent = 'Traitement terminé.';
+      if (remaining === 0) statusEl.textContent = t('status.done');
     };
     reader.onerror = () => {
-      renderErrorCard(file.name, "Impossible de lire le fichier.");
+      renderErrorCard(file.name, t('status.readError'));
       remaining--;
     };
     reader.readAsText(file);
@@ -151,21 +157,21 @@ function renderFileCard(name, meta, xs, ys) {
     <div class="file-card-head">
       <div>
         <div class="file-name">${escapeHtml(name)}</div>
-        <div class="file-meta-line">${xs.length} points décodés</div>
+        <div class="file-meta-line">${xs.length} ${t('meta.pointsDecoded')}</div>
       </div>
     </div>
     <svg class="mini-trace" id="${svgId}" viewBox="0 0 800 140" preserveAspectRatio="none" role="img" aria-label="Aperçu du spectre ${escapeHtml(name)}"></svg>
     <table class="meta-table">
-      ${metaRow('Titre', meta['TITLE'])}
-      ${metaRow('Type', meta['DATA TYPE'])}
-      ${metaRow('Origine', meta['ORIGIN'])}
-      ${metaRow('Unités X', meta['XUNITS'])}
-      ${metaRow('Unités Y', meta['YUNITS'])}
-      ${metaRow('Points', meta['NPOINTS'])}
+      ${metaRow(t('meta.title'), meta['TITLE'])}
+      ${metaRow(t('meta.type'), meta['DATA TYPE'])}
+      ${metaRow(t('meta.origin'), meta['ORIGIN'])}
+      ${metaRow(t('meta.xunits'), meta['XUNITS'])}
+      ${metaRow(t('meta.yunits'), meta['YUNITS'])}
+      ${metaRow(t('meta.points'), meta['NPOINTS'])}
     </table>
     <div class="card-actions">
-      <button type="button" class="secondary" data-action="csv">Télécharger CSV</button>
-      <button type="button" class="secondary" data-action="json">Télécharger JSON</button>
+      <button type="button" class="secondary" data-action="csv">${t('btn.downloadCsv')}</button>
+      <button type="button" class="secondary" data-action="json">${t('btn.downloadJson')}</button>
     </div>
   `;
   resultsEl.appendChild(card);
@@ -188,7 +194,7 @@ function renderErrorCard(name, message) {
     <div class="file-card-head">
       <div>
         <div class="file-name">${escapeHtml(name)}</div>
-        <div class="error-msg">Échec du décodage — ${escapeHtml(message)}</div>
+        <div class="error-msg">${t('status.decodeFail')} ${escapeHtml(message)}</div>
       </div>
     </div>
   `;
@@ -196,7 +202,7 @@ function renderErrorCard(name, message) {
 }
 
 zipBtn.addEventListener('click', async () => {
-  if (!window.JSZip) { statusEl.textContent = "JSZip indisponible."; return; }
+  if (!window.JSZip) { statusEl.textContent = t('status.zipUnavailable'); return; }
   const zip = new JSZip();
   processed.forEach(p => {
     const xLabel = p.meta['XUNITS'] || 'x', yLabel = p.meta['YUNITS'] || 'y';
@@ -212,6 +218,11 @@ zipBtn.addEventListener('click', async () => {
 });
 
 sampleBtn.addEventListener('click', () => processOne('exemple_polymere.jdx', SAMPLE_JCAMP));
+
+document.addEventListener('languagechange', () => {
+  resultsEl.innerHTML = '';
+  processed.forEach(p => renderFileCard(p.name, p.meta, p.xs, p.ys));
+});
 </script>
 
 </body>

@@ -573,11 +573,11 @@ function render3DFromItems(containerId, items) {
   xStartLabel.position.set(-spread / 2, -0.14, 0); group.add(xStartLabel);
   const xEndLabel = makeTextSprite(Math.round(xMax) + '', '#9FB2AF');
   xEndLabel.position.set(spread / 2, -0.14, 0); group.add(xEndLabel);
-  const xAxisTitle = makeTextSprite("nombre d'onde (cm⁻¹)", '#9FB2AF');
+  const xAxisTitle = makeTextSprite(t('compare.axis3dX'), '#9FB2AF');
   xAxisTitle.position.set(0, -0.3, 0); group.add(xAxisTitle);
-  const yAxisTitle = makeTextSprite('intensité', '#9FB2AF');
+  const yAxisTitle = makeTextSprite(t('compare.axis3dY'), '#9FB2AF');
   yAxisTitle.position.set(-spread / 2 - 0.55, heightScale, 0); group.add(yAxisTitle);
-  const zAxisTitle = makeTextSprite('échantillons', '#9FB2AF');
+  const zAxisTitle = makeTextSprite(t('compare.axis3dZ'), '#9FB2AF');
   zAxisTitle.position.set(-spread / 2, -0.14, -zSpan); group.add(zAxisTitle);
 
   group.position.z = zSpan / 2;
@@ -715,3 +715,241 @@ function layoutAnnotationLanes(items, getX, getWidth, gap) {
     return Object.assign({}, item, { lane: Math.min(lane, 2) });
   });
 }
+
+/* =========================================================
+   i18n — language toggle (FR / EN), no cookies, no storage
+   ========================================================= */
+const TRANSLATIONS = {
+  fr: {
+    'nav.convert': 'Convertir', 'nav.compare': 'Comparer', 'nav.formulation': 'Formulation',
+    'nav.formats': 'Formats', 'nav.upcoming': 'Prochains outils',
+
+    'badge.local': '100% local', 'badge.localFull': '100% local — traitement dans votre navigateur',
+    'badge.noaccount': 'Aucun compte', 'badge.noaccountFull': 'Aucun compte requis',
+    'badge.free': 'Gratuit', 'badge.batch': 'Traitement par lot',
+    'badge.multifile': 'Comparaison multi-fichiers', 'badge.jsonio': 'Import / export JSON',
+
+    'btn.browse': 'Parcourir mes fichiers', 'btn.tryExample': 'Essayer avec un exemple',
+    'btn.tryTwoExamples': 'Essayer avec deux exemples',
+    'btn.downloadCsv': 'Télécharger CSV', 'btn.downloadJson': 'Télécharger JSON',
+    'btn.downloadZip': 'Télécharger tout (.zip)',
+    'btn.addComponent': '+ Ajouter un composant', 'btn.addProperty': '+ Ajouter une propriété',
+    'btn.loadSample': 'Charger un exemple', 'btn.exportConfig': 'Exporter la config (.json)',
+    'btn.importConfig': 'Importer une config (.json)', 'btn.exportMix': 'Exporter ce mix (.csv)',
+    'btn.view2d': 'Vue 2D', 'btn.view3d': 'Vue 3D',
+
+    'drop.title': 'Glissez-déposez vos fichiers ici', 'drop.or': 'ou',
+
+    'status.received': 'fichier(s) reçu(s) — traitement en cours…',
+    'status.done': 'Traitement terminé.', 'status.readError': 'Impossible de lire le fichier.',
+    'status.readErrorNamed': 'Impossible de lire',
+    'status.decodeFail': 'Échec du décodage —', 'status.decodeFailOn': 'Échec sur',
+    'status.zipUnavailable': 'JSZip indisponible.', 'status.invalidConfig': 'Fichier de configuration invalide.',
+
+    'meta.pointsDecoded': 'points décodés', 'meta.title': 'Titre', 'meta.type': 'Type',
+    'meta.origin': 'Origine', 'meta.xunits': 'Unités X', 'meta.yunits': 'Unités Y', 'meta.points': 'Points',
+
+    'compare.empty': "Aucun spectre chargé pour l'instant.", 'compare.remove': 'Retirer',
+    'compare.axisX': "Nombre d'onde (cm⁻¹)", 'compare.axisY': 'Intensité',
+    'compare.axis3dX': "nombre d'onde (cm⁻¹)", 'compare.axis3dY': 'intensité', 'compare.axis3dZ': 'échantillons',
+
+    'form.name': 'Nom', 'form.unit': 'Unité', 'form.min': 'Min', 'form.max': 'Max',
+    'form.startValue': 'Valeur de départ', 'form.base': 'Base', 'form.targetMinMax': 'Cible min / max',
+    'form.newComponent': 'Nouveau composant', 'form.newProperty': 'Nouvelle propriété',
+    'form.noPropsYet': 'Ajoutez une propriété pour voir un résultat.',
+
+    'lang.toggleLabel': 'Langue',
+
+    'home.eyebrow': 'spectra.tools — outils de laboratoire',
+    'home.h1': 'Vos spectres, <span class="accent">en clair</span>.',
+    'home.lede': 'Convertir, comparer et explorer des spectres JCAMP-DX — directement dans votre navigateur, sans compte, sans envoi de fichier.',
+    'home.groupsLabel': 'GROUPEMENTS FONCTIONNELS — REPÈRES IR',
+    'home.moleculeLabel': 'STRUCTURE — MODÈLE 3D',
+    'home.moleculeSub': 'rotation automatique',
+    'home.toolsTitle': 'Nos outils',
+    'home.toolsSub': 'Chacun a sa propre page — clique pour l\'ouvrir.',
+    'home.open': 'Ouvrir →',
+    'home.examplesTitle': 'Exemples annotés',
+    'home.examplesSub': 'Trois signatures IR typiques, avec les groupements fonctionnels repérés directement sur le tracé.',
+    'home.understandTitle': 'Comprendre vos spectres',
+    'home.understandSub': 'De quoi il s\'agit, et comment ce site s\'en sert.',
+    'home.formatsTitle': 'Ce que le site sait faire',
+    'home.formatsSub': 'Version 1 — le socle avant d\'ajouter d\'autres formats.',
+    'home.upcomingTitle': 'Prochains outils',
+    'home.upcomingSub': 'Convertisseur, comparateur et calculateur de formulation sont en ligne. Voici ce qui pourrait suivre.',
+    'home.footer': 'Prototype — outils de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).',
+
+    'convert.eyebrow': 'Outil 01 — conversion de spectres',
+    'convert.h1': 'Vos spectres JCAMP&#8209;DX, <span class="accent">propres et lisibles</span>.',
+    'convert.lede': 'Déposez un ou plusieurs fichiers <strong>.jdx</strong> / <strong>.dx</strong>. L\'outil décode l\'en-tête, reconstruit les points X/Y — y compris les formats compressés SQZ/DIF/DUP — et vous rend des fichiers exploitables tout de suite.',
+    'convert.formatsNote': 'Formats acceptés : JCAMP-DX (.jdx, .dx) — blocs XYDATA (X++(Y..Y)) et XYPOINTS.',
+    'convert.crosslink': 'Envie de superposer plusieurs spectres au lieu de les convertir un par un ? →',
+    'convert.footer': 'Prototype — outil de conversion de fichiers de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).',
+
+    'compare.eyebrow': 'Outil 02 — comparaison de spectres',
+    'compare.h1': 'Superposez vos spectres, <span class="accent">repérez les écarts</span> d\'un coup d\'œil.',
+    'compare.lede': 'Chargez deux fichiers ou plus pour les afficher sur un même graphique, chacun dans sa couleur, avec une légende pour les identifier et les retirer.',
+    'compare.crosslink': 'Besoin d\'exporter un seul spectre en CSV/JSON plutôt que de le comparer ? →',
+    'compare.footer': 'Prototype — outil de comparaison de fichiers de spectroscopie. Le format JCAMP-DX est un standard ouvert utilisé par la plupart des logiciels de laboratoire (IR, Raman, UV-Vis, RMN).',
+
+    'formulation.eyebrow': 'Outil 03 — calculateur de formulation',
+    'formulation.h1': 'Ajustez vos dosages, <span class="accent">visualisez l\'effet</span> en direct.',
+    'formulation.lede': 'Définissez vos composants et des règles simples reliant leur dosage à des propriétés estimées. Ajustez les curseurs pour explorer des compromis.',
+    'formulation.disclaimer': '⚠ Modèle linéaire à règles que <em>vous</em> définissez — pas une simulation physico-chimique. Utile pour explorer des tendances et préparer un plan d\'essais, pas pour remplacer des mesures réelles.',
+    'formulation.componentsTitle': 'Composants',
+    'formulation.componentsHint': 'Nom, unité, et plage de dosage possible pour chacun.',
+    'formulation.propertiesTitle': 'Propriétés estimées',
+    'formulation.propertiesHint': 'Valeur de base, puis contribution de chaque composant par unité de dosage. Cible optionnelle (zone verte du curseur de résultat).',
+    'formulation.simulatorTitle': 'Simulateur',
+    'formulation.footer': 'Prototype — calculateur de formulation à règles paramétrables. Pas une simulation physico-chimique.',
+  },
+  en: {
+    'nav.convert': 'Convert', 'nav.compare': 'Compare', 'nav.formulation': 'Formulation',
+    'nav.formats': 'Formats', 'nav.upcoming': 'Upcoming tools',
+
+    'badge.local': '100% local', 'badge.localFull': '100% local — processed in your browser',
+    'badge.noaccount': 'No account', 'badge.noaccountFull': 'No account required',
+    'badge.free': 'Free', 'badge.batch': 'Batch processing',
+    'badge.multifile': 'Multi-file comparison', 'badge.jsonio': 'JSON import / export',
+
+    'btn.browse': 'Browse files', 'btn.tryExample': 'Try an example',
+    'btn.tryTwoExamples': 'Try two examples',
+    'btn.downloadCsv': 'Download CSV', 'btn.downloadJson': 'Download JSON',
+    'btn.downloadZip': 'Download all (.zip)',
+    'btn.addComponent': '+ Add a component', 'btn.addProperty': '+ Add a property',
+    'btn.loadSample': 'Load an example', 'btn.exportConfig': 'Export config (.json)',
+    'btn.importConfig': 'Import config (.json)', 'btn.exportMix': 'Export this mix (.csv)',
+    'btn.view2d': '2D view', 'btn.view3d': '3D view',
+
+    'drop.title': 'Drag and drop your files here', 'drop.or': 'or',
+
+    'status.received': 'file(s) received — processing…',
+    'status.done': 'Processing complete.', 'status.readError': 'Unable to read the file.',
+    'status.readErrorNamed': 'Unable to read',
+    'status.decodeFail': 'Decoding failed —', 'status.decodeFailOn': 'Failed on',
+    'status.zipUnavailable': 'JSZip unavailable.', 'status.invalidConfig': 'Invalid configuration file.',
+
+    'meta.pointsDecoded': 'points decoded', 'meta.title': 'Title', 'meta.type': 'Type',
+    'meta.origin': 'Origin', 'meta.xunits': 'X units', 'meta.yunits': 'Y units', 'meta.points': 'Points',
+
+    'compare.empty': 'No spectrum loaded yet.', 'compare.remove': 'Remove',
+    'compare.axisX': 'Wavenumber (cm⁻¹)', 'compare.axisY': 'Intensity',
+    'compare.axis3dX': 'wavenumber (cm⁻¹)', 'compare.axis3dY': 'intensity', 'compare.axis3dZ': 'samples',
+
+    'form.name': 'Name', 'form.unit': 'Unit', 'form.min': 'Min', 'form.max': 'Max',
+    'form.startValue': 'Starting value', 'form.base': 'Base', 'form.targetMinMax': 'Target min / max',
+    'form.newComponent': 'New component', 'form.newProperty': 'New property',
+    'form.noPropsYet': 'Add a property to see a result.',
+
+    'lang.toggleLabel': 'Language',
+
+    'home.eyebrow': 'spectra.tools — lab tools',
+    'home.h1': 'Your spectra, <span class="accent">made clear</span>.',
+    'home.lede': 'Convert, compare, and explore JCAMP-DX spectra — right in your browser, no account, no file upload.',
+    'home.groupsLabel': 'FUNCTIONAL GROUPS — IR REFERENCE',
+    'home.moleculeLabel': 'STRUCTURE — 3D MODEL',
+    'home.moleculeSub': 'automatic rotation',
+    'home.toolsTitle': 'Our tools',
+    'home.toolsSub': 'Each has its own page — click to open it.',
+    'home.open': 'Open →',
+    'home.examplesTitle': 'Annotated examples',
+    'home.examplesSub': 'Three typical IR signatures, with functional groups marked directly on the trace.',
+    'home.understandTitle': 'Understanding your spectra',
+    'home.understandSub': 'What it is, and how this site uses it.',
+    'home.formatsTitle': 'What the site can do',
+    'home.formatsSub': 'Version 1 — the foundation before adding more formats.',
+    'home.upcomingTitle': 'Upcoming tools',
+    'home.upcomingSub': 'Converter, comparator, and formulation calculator are live. Here\'s what could come next.',
+    'home.footer': 'Prototype — spectroscopy tools. JCAMP-DX is an open standard used by most laboratory software (IR, Raman, UV-Vis, NMR).',
+
+    'convert.eyebrow': 'Tool 01 — spectrum conversion',
+    'convert.h1': 'Your JCAMP&#8209;DX spectra, <span class="accent">clean and readable</span>.',
+    'convert.lede': 'Drop one or more <strong>.jdx</strong> / <strong>.dx</strong> files. The tool decodes the header, reconstructs the X/Y points — including SQZ/DIF/DUP compressed formats — and gives you usable files right away.',
+    'convert.formatsNote': 'Accepted formats: JCAMP-DX (.jdx, .dx) — XYDATA (X++(Y..Y)) and XYPOINTS blocks.',
+    'convert.crosslink': 'Want to overlay several spectra instead of converting them one by one? →',
+    'convert.footer': 'Prototype — spectroscopy file conversion tool. JCAMP-DX is an open standard used by most laboratory software (IR, Raman, UV-Vis, NMR).',
+
+    'compare.eyebrow': 'Tool 02 — spectrum comparison',
+    'compare.h1': 'Overlay your spectra, <span class="accent">spot the differences</span> at a glance.',
+    'compare.lede': 'Load two or more files to display them on the same chart, each in its own color, with a legend to identify and remove them.',
+    'compare.crosslink': 'Need to export a single spectrum to CSV/JSON instead of comparing it? →',
+    'compare.footer': 'Prototype — spectroscopy file comparison tool. JCAMP-DX is an open standard used by most laboratory software (IR, Raman, UV-Vis, NMR).',
+
+    'formulation.eyebrow': 'Tool 03 — formulation calculator',
+    'formulation.h1': 'Adjust your dosages, <span class="accent">see the effect</span> live.',
+    'formulation.lede': 'Define your components and simple rules linking their dosage to estimated properties. Adjust the sliders to explore trade-offs.',
+    'formulation.disclaimer': '⚠ A linear rule-based model that <em>you</em> define — not a physico-chemical simulation. Useful for exploring trends and preparing a test plan, not for replacing real measurements.',
+    'formulation.componentsTitle': 'Components',
+    'formulation.componentsHint': 'Name, unit, and possible dosage range for each one.',
+    'formulation.propertiesTitle': 'Estimated properties',
+    'formulation.propertiesHint': 'Base value, then each component\'s contribution per unit of dosage. Optional target (green zone on the result slider).',
+    'formulation.simulatorTitle': 'Simulator',
+    'formulation.footer': 'Prototype — configurable rule-based formulation calculator. Not a physico-chemical simulation.',
+  }
+};
+
+const INTERNAL_PAGES = ['index.html', 'convertir.html', 'comparer.html', 'formulation.html'];
+
+function getLangFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const lang = params.get('lang');
+  return (lang === 'en') ? 'en' : 'fr';
+}
+
+let currentLang = getLangFromUrl();
+
+function t(key) {
+  return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || TRANSLATIONS.fr[key] || key;
+}
+
+function computeLocalizedHref(href, lang) {
+  if (href.startsWith('#')) return href; // same-document fragment: browser preserves the query string automatically
+  const [pathPart, hashPart] = href.split('#');
+  const fileName = pathPart.split('?')[0];
+  if (!INTERNAL_PAGES.includes(fileName)) return href;
+  let newHref = fileName;
+  if (lang === 'en') newHref += (newHref.includes('?') ? '&' : '?') + 'lang=en';
+  if (hashPart) newHref += '#' + hashPart;
+  return newHref;
+}
+
+function updateInternalLinks(lang) {
+  document.querySelectorAll('a[href]').forEach(a => {
+    const href = a.getAttribute('href');
+    if (!href) return;
+    a.setAttribute('href', computeLocalizedHref(href, lang));
+  });
+}
+
+function applyLanguage(lang) {
+  currentLang = lang === 'en' ? 'en' : 'fr';
+  document.documentElement.lang = currentLang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.getAttribute('data-i18n-html'));
+  });
+  updateInternalLinks(currentLang);
+  document.querySelectorAll('.lang-toggle button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+  const url = new URL(window.location.href);
+  if (currentLang === 'en') url.searchParams.set('lang', 'en');
+  else url.searchParams.delete('lang');
+  history.replaceState(null, '', url.toString());
+  document.dispatchEvent(new CustomEvent('languagechange'));
+}
+
+function initLanguageToggle() {
+  document.querySelectorAll('.lang-toggle').forEach(toggle => {
+    toggle.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-lang]');
+      if (!btn) return;
+      applyLanguage(btn.dataset.lang);
+    });
+  });
+  applyLanguage(currentLang);
+}
+
+document.addEventListener('DOMContentLoaded', initLanguageToggle);

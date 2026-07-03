@@ -15,6 +15,8 @@
 <style>
   .page-header{padding:36px 0 8px;}
 </style>
+<!-- Cloudflare Web Analytics : remplace TON_TOKEN_ICI par le token fourni après inscription sur dash.cloudflare.com -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "TON_TOKEN_ICI"}'></script>
 </head>
 <body>
 
@@ -27,11 +29,15 @@
       spectra.tools
     </a>
     <div class="nav-links">
-      <a href="convertir.html">Convertir</a>
-      <a href="comparer.html">Comparer</a>
-      <a href="formulation.html" class="active">Formulation</a>
-      <a href="index.html#formats">Formats</a>
-      <a href="index.html#upcoming">Prochains outils</a>
+      <a href="convertir.html" data-i18n="nav.convert">Convertir</a>
+      <a href="comparer.html" data-i18n="nav.compare">Comparer</a>
+      <a href="formulation.html" class="active" data-i18n="nav.formulation">Formulation</a>
+      <a href="index.html#formats" data-i18n="nav.formats">Formats</a>
+      <a href="index.html#upcoming" data-i18n="nav.upcoming">Prochains outils</a>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Choix de la langue">
+      <button type="button" data-lang="fr" class="active">FR</button>
+      <button type="button" data-lang="en">EN</button>
     </div>
   </div>
 </nav>
@@ -39,64 +45,64 @@
 <div class="wrap">
 
   <header class="page-header reveal">
-    <div class="eyebrow">Outil 03 — calculateur de formulation</div>
-    <h1 style="max-width:22ch;">Ajustez vos dosages, <span class="accent">visualisez l'effet</span> en direct.</h1>
-    <p class="lede">Définissez vos composants et des règles simples reliant leur dosage à des propriétés estimées. Ajustez les curseurs pour explorer des compromis.</p>
+    <div class="eyebrow" data-i18n="formulation.eyebrow">Outil 03 — calculateur de formulation</div>
+    <h1 style="max-width:22ch;" data-i18n-html="formulation.h1">Ajustez vos dosages, <span class="accent">visualisez l'effet</span> en direct.</h1>
+    <p class="lede" data-i18n="formulation.lede">Définissez vos composants et des règles simples reliant leur dosage à des propriétés estimées. Ajustez les curseurs pour explorer des compromis.</p>
     <div class="badge-row">
-      <span class="badge"><strong>100% local</strong></span>
-      <span class="badge"><strong>Aucun compte</strong></span>
-      <span class="badge"><strong>Import / export JSON</strong></span>
+      <span class="badge"><strong data-i18n="badge.local">100% local</strong></span>
+      <span class="badge"><strong data-i18n="badge.noaccount">Aucun compte</strong></span>
+      <span class="badge"><strong data-i18n="badge.jsonio">Import / export JSON</strong></span>
     </div>
   </header>
 
   <section id="formulation" class="reveal">
-    <p class="disclaimer">⚠ Modèle linéaire à règles que <em>vous</em> définissez — pas une simulation physico-chimique. Utile pour explorer des tendances et préparer un plan d'essais, pas pour remplacer des mesures réelles.</p>
+    <p class="disclaimer" data-i18n-html="formulation.disclaimer">⚠ Modèle linéaire à règles que <em>vous</em> définissez — pas une simulation physico-chimique. Utile pour explorer des tendances et préparer un plan d'essais, pas pour remplacer des mesures réelles.</p>
 
     <div class="config-block">
-      <h3>Composants</h3>
-      <p class="config-hint">Nom, unité, et plage de dosage possible pour chacun.</p>
+      <h3 data-i18n="formulation.componentsTitle">Composants</h3>
+      <p class="config-hint" data-i18n="formulation.componentsHint">Nom, unité, et plage de dosage possible pour chacun.</p>
       <div style="overflow-x:auto;">
         <table class="config-table" id="componentsTable">
-          <thead><tr><th>Nom</th><th>Unité</th><th>Min</th><th>Max</th><th>Valeur de départ</th><th></th></tr></thead>
+          <thead><tr><th data-i18n="form.name">Nom</th><th data-i18n="form.unit">Unité</th><th data-i18n="form.min">Min</th><th data-i18n="form.max">Max</th><th data-i18n="form.startValue">Valeur de départ</th><th></th></tr></thead>
           <tbody id="componentsBody"></tbody>
         </table>
       </div>
-      <button type="button" class="secondary add-row-btn" id="addComponentBtn">+ Ajouter un composant</button>
+      <button type="button" class="secondary add-row-btn" id="addComponentBtn" data-i18n="btn.addComponent">+ Ajouter un composant</button>
     </div>
 
     <div class="config-block">
-      <h3>Propriétés estimées</h3>
-      <p class="config-hint">Valeur de base, puis contribution de chaque composant par unité de dosage. Cible optionnelle (zone verte du curseur de résultat).</p>
+      <h3 data-i18n="formulation.propertiesTitle">Propriétés estimées</h3>
+      <p class="config-hint" data-i18n="formulation.propertiesHint">Valeur de base, puis contribution de chaque composant par unité de dosage. Cible optionnelle (zone verte du curseur de résultat).</p>
       <div style="overflow-x:auto;">
         <table class="config-table" id="propertiesTable">
           <thead><tr id="propertiesHeadRow"><th>Nom</th><th>Unité</th><th>Base</th></tr></thead>
           <tbody id="propertiesBody"></tbody>
         </table>
       </div>
-      <button type="button" class="secondary add-row-btn" id="addPropertyBtn">+ Ajouter une propriété</button>
+      <button type="button" class="secondary add-row-btn" id="addPropertyBtn" data-i18n="btn.addProperty">+ Ajouter une propriété</button>
     </div>
 
     <div class="config-actions">
-      <button type="button" class="secondary" id="loadSampleFormulaBtn">Charger un exemple</button>
-      <button type="button" class="ghost" id="exportConfigBtn">Exporter la config (.json)</button>
-      <button type="button" class="ghost" id="importConfigBtn">Importer une config (.json)</button>
+      <button type="button" class="secondary" id="loadSampleFormulaBtn" data-i18n="btn.loadSample">Charger un exemple</button>
+      <button type="button" class="ghost" id="exportConfigBtn" data-i18n="btn.exportConfig">Exporter la config (.json)</button>
+      <button type="button" class="ghost" id="importConfigBtn" data-i18n="btn.importConfig">Importer une config (.json)</button>
       <input type="file" id="formulaImportInput" accept=".json">
     </div>
 
-    <h3 style="font-family:var(--font-display);font-size:19px;margin:32px 0 14px;">Simulateur</h3>
+    <h3 style="font-family:var(--font-display);font-size:19px;margin:32px 0 14px;" data-i18n="formulation.simulatorTitle">Simulateur</h3>
     <div class="sim-grid">
       <div>
         <div id="slidersPanel"></div>
       </div>
       <div>
         <div id="resultsPanel"></div>
-        <button type="button" class="ghost" id="exportMixBtn" style="margin-top:4px;">Exporter ce mix (.csv)</button>
+        <button type="button" class="ghost" id="exportMixBtn" style="margin-top:4px;" data-i18n="btn.exportMix">Exporter ce mix (.csv)</button>
       </div>
     </div>
   </section>
 
   <footer>
-    <p>Prototype — calculateur de formulation à règles paramétrables. Pas une simulation physico-chimique.</p>
+    <p data-i18n="formulation.footer">Prototype — calculateur de formulation à règles paramétrables. Pas une simulation physico-chimique.</p>
   </footer>
 
 </div>
@@ -183,14 +189,14 @@ function renderComponentsTable() {
 }
 
 function renderPropertiesTable() {
-  propertiesHeadRow.innerHTML = '<th>Nom</th><th>Unité</th><th>Base</th>';
+  propertiesHeadRow.innerHTML = '<th>' + t('form.name') + '</th><th>' + t('form.unit') + '</th><th>' + t('form.base') + '</th>';
   formComponents.forEach(c => {
     const th = document.createElement('th');
     th.textContent = c.name || '(sans nom)';
     propertiesHeadRow.appendChild(th);
   });
   const extraTh = document.createElement('th');
-  extraTh.innerHTML = 'Cible min / max';
+  extraTh.innerHTML = t('form.targetMinMax');
   propertiesHeadRow.appendChild(extraTh);
   propertiesHeadRow.appendChild(document.createElement('th'));
 
@@ -251,7 +257,7 @@ function formatNum(n) { return Math.round(n * 100) / 100; }
 function renderResults() {
   resultsPanel.innerHTML = '';
   if (formProperties.length === 0) {
-    resultsPanel.innerHTML = '<p class="compare-empty" style="text-align:left;padding:8px 0;">Ajoutez une propriété pour voir un résultat.</p>';
+    resultsPanel.innerHTML = '<p class="compare-empty" style="text-align:left;padding:8px 0;">' + t('form.noPropsYet') + '</p>';
     return;
   }
   formProperties.forEach(p => {
@@ -290,11 +296,11 @@ function renderResults() {
 }
 
 document.getElementById('addComponentBtn').addEventListener('click', () => {
-  newComponent('Nouveau composant', '%', 0, 100, 0);
+  newComponent(t('form.newComponent'), '%', 0, 100, 0);
   renderAll();
 });
 document.getElementById('addPropertyBtn').addEventListener('click', () => {
-  newProperty('Nouvelle propriété', '', 0, {}, null, null);
+  newProperty(t('form.newProperty'), '', 0, {}, null, null);
   renderPropertiesTable();
   renderResults();
 });
@@ -352,7 +358,7 @@ document.getElementById('formulaImportInput').addEventListener('change', (e) => 
       compIdSeq = formComponents.length; propIdSeq = formProperties.length;
       renderAll();
     } catch (err) {
-      alert("Fichier de configuration invalide.");
+      alert(t('status.invalidConfig'));
     }
   };
   reader.readAsText(file);
@@ -368,6 +374,8 @@ document.getElementById('exportMixBtn').addEventListener('click', () => {
 
 // initial empty state render
 renderAll();
+
+document.addEventListener('languagechange', () => renderAll());
 </script>
 
 </body>
