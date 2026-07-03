@@ -269,7 +269,7 @@ function initMoleculeScene() {
   const container = document.getElementById('moleculeCanvas');
   if (!container || typeof THREE === 'undefined') return;
 
-  const atomColors = [0x57C9AC, 0xE8B85F, 0xEC8478, 0x83AEE0, 0xD19BC7];
+  const atomColors = [0x3CDBB0, 0xFFC352, 0xFF6F5E, 0x4FACFF, 0xE77FD1];
   // simple ball-and-stick oligomer: a backbone chain with a couple of branches
   const atoms = [
     [0, 0, 0], [1.1, 0.4, 0.2], [2.1, -0.2, 0.5], [3.2, 0.3, 0.1],
@@ -473,8 +473,8 @@ function initWaterfallScene(containerId) {
    3D view driven by real comparator data (optional view)
    ========================================================= */
 const ACCENT_HEX = {
-  'var(--verdigris)': 0x57C9AC, 'var(--brass)': 0xE8B85F,
-  'var(--danger)': 0xEC8478, 'var(--slate)': 0x83AEE0, 'var(--plum)': 0xD19BC7
+  'var(--verdigris)': 0x3CDBB0, 'var(--brass)': 0xFFC352,
+  'var(--danger)': 0xFF6F5E, 'var(--slate)': 0x4FACFF, 'var(--plum)': 0xE77FD1
 };
 
 function makeTextSprite(text, color) {
@@ -858,11 +858,6 @@ const TRANSLATIONS = {
     'hero2.nextDesc': 'Identification automatique des groupes fonctionnels.',
     'hero2.hotspot1': 'Identifier les groupes fonctionnels',
     'hero2.hotspot2': 'Comparer plusieurs spectres',
-    'hero2.specsTitle': 'Moteur',
-    'hero2.spec1': 'Traitement : local',
-    'hero2.spec2': 'Format : JCAMP-DX',
-    'hero2.spec3': 'Rendu : WebGL temps réel',
-    'hero2.spec4': 'Latence : instantanée',
 
     'convert.eyebrow': 'Outil 02 — conversion de spectres',
     'convert.h1': 'Vos spectres JCAMP&#8209;DX, <span class="accent">propres et lisibles</span>.',
@@ -988,11 +983,6 @@ const TRANSLATIONS = {
     'hero2.nextDesc': 'Automatic functional group identification.',
     'hero2.hotspot1': 'Identify functional groups',
     'hero2.hotspot2': 'Compare several spectra',
-    'hero2.specsTitle': 'Engine',
-    'hero2.spec1': 'Processing: local',
-    'hero2.spec2': 'Format: JCAMP-DX',
-    'hero2.spec3': 'Rendering: real-time WebGL',
-    'hero2.spec4': 'Latency: instant',
 
     'convert.eyebrow': 'Tool 02 — spectrum conversion',
     'convert.h1': 'Your JCAMP&#8209;DX spectra, <span class="accent">clean and readable</span>.',
